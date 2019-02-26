@@ -27,7 +27,6 @@ void test_ack_bits();
 void test_packet_loss();
 void test_sequence_wrap_around();
 void tests();
-#define NET_UNIT_TEST
 
 
 //Platform detection
@@ -35,7 +34,8 @@ void tests();
 #define PLATFORM_MAC      2
 #define PLATFORM_UNIX     3
 #define ERROR_STATE		  1
-#define SHOW_ACKS
+//#define SHOW_ACKS
+//#define NET_UNIT_TEST			
 
 
 #if defined(_WIN32)
