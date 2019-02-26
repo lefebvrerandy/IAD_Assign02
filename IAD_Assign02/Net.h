@@ -123,7 +123,7 @@ namespace net
 			 *	
 			 */
 			this->address = ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | d;				//Bitwise shift operators used to set the unsigned int "address" field
-
+			//this->address = 
 			this->port = port;														//Port# set in main during object instantiation, by the CLA
 		}
 
@@ -411,13 +411,17 @@ namespace net
 		}
 
 
-
-		bool Start( int port )
+		//Start the server on the port indicated by the argument
+		bool Start(int port)
 		{
 			assert( !running );
 			printf( "start connection on port %d\n", port );
-			if ( !socket.Open( port ) )
+			
+			
+			if (!socket.Open(port))
+			{
 				return false;
+			}
 			running = true;
 			OnStart();
 			return true;
@@ -467,22 +471,24 @@ namespace net
 		
 		bool IsConnecting() const
 		{
-			return state == Connecting;
+			return state == Connecting;		//Connecting = 2
 		}
 		
 		bool ConnectFailed() const
 		{
-			return state == ConnectFail;
+			return state == ConnectFail;	//ConnectFail = 3
 		}
-		
+
+
+		//From the enum State (defined blow)
 		bool IsConnected() const
 		{
-			return state == Connected;
+			return state == Connected;		//Connected = 4
 		}
 		
 		bool IsListening() const
 		{
-			return state == Listening;
+			return state == Listening;		//Listening = 1
 		}
 		
 		Mode GetMode() const
@@ -550,7 +556,6 @@ namespace net
 				 packet[2] != (unsigned char) ( ( protocolId >> 8 ) & 0xFF ) ||
 				 packet[3] != (unsigned char) ( protocolId & 0xFF ) )
 				return 0;
-//
 			if ( mode == Server && !IsConnected() )
 			{
 				printf( "server accepts connection from client %d.%d.%d.%d:%d\n", 
@@ -559,7 +564,6 @@ namespace net
 				address = sender;
 				OnConnect();
 			}
-//
 			if ( sender == address )
 			{
 				if ( mode == Client && state == Connecting )
@@ -597,7 +601,8 @@ namespace net
 			timeoutAccumulator = 0.0f;
 			address = Address();
 		}
-	
+
+
 		enum State
 		{
 			Disconnected,

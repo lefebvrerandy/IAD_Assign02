@@ -25,7 +25,7 @@ const int ClientPort = 30001;
 const int ProtocolId = 0x11223344;
 const float DeltaTime = 1.0f / 30.0f;				//Set to 1/30 of some unknown unit; doesn't appear to ever change, and looks like it's used as an counter for the elapsed time/units between Update calls
 const float SendRate = 1.0f / 30.0f;
-const float TimeOut = 10.0f;
+const float TimeOut = 5.0f;
 const int PacketSize = 256;
 
 
@@ -254,7 +254,7 @@ int main( int argc, char * argv[] )
 	{
 
 		
-		//Update flow control using a Reliable Connection object
+		//This is a setter; IsConnected will always set the enum State = Connected (value of 4)
 		if (connection.IsConnected())
 		{
 			
@@ -262,7 +262,8 @@ int main( int argc, char * argv[] )
 			flowControl.Update(DeltaTime, (connection.GetReliabilitySystem().GetRoundTripTime() * 1000.0f));
 		}
 			
-		
+
+		//Returns 30 if mode = Good, or 10 if mode = Bad
 		const float sendRate = flowControl.GetSendRate();
 
 
