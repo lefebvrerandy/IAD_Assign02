@@ -3,14 +3,18 @@
 	http://www.gaffer.org/networking-for-game-programmers
 	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
-
 #ifndef NET_H
 #define NET_H
 
-#include <cstring> // for memcpy
+
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
 
 
-////Prototypes
+//Prototypes
 void test_packet_queue();
 void test_reliability_system();
 void test_join();
@@ -25,11 +29,14 @@ void test_sequence_wrap_around();
 void tests();
 #define NET_UNIT_TEST
 
-// platform detection
 
+//Platform detection
 #define PLATFORM_WINDOWS  1
 #define PLATFORM_MAC      2
 #define PLATFORM_UNIX     3
+#define ERROR_STATE		  1
+#define SHOW_ACKS
+
 
 #if defined(_WIN32)
 #define PLATFORM PLATFORM_WINDOWS
@@ -57,6 +64,7 @@ void tests();
 
 #endif
 
+
 #include <assert.h>
 #include <vector>
 #include <map>
@@ -83,30 +91,51 @@ namespace net
 
 #endif
 
-	// internet address
-
+	
+	
+	/* This GIANT class is used to set the properties of our base connection, and interact/set the sockets used in the inline functions below */
 	class Address
 	{
+
 	public:
-	
+
+		
+		//Default Constructor (1)
 		Address()
 		{
 			address = 0;
-			port = 0;
+			port	= 0;
 		}
-	
+
+		
+		//Constructor (2) for specific address properties using the bit-shift operators
 		Address( unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned short port )
 		{
-			this->address = ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | d;
-			this->port = port;
+
+			/*
+			 * Left shift each argument by the number of times shown in the brackets
+			 * Examples 
+			 *	In Decimal	:		4		left-shifted by 1 =		8
+			 *	In Binary	: 	00000100	left shifted by 1 = 00001000
+			 *	
+			 *	In Decimal	:		1		left-shifted by 24 = 16777216
+			 *	In Binary	:	00000001	left-shifted by 24 = 1000000000000000000000000
+			 *	
+			 */
+			this->address = ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | d;				//Bitwise shift operators used to set the unsigned int "address" field
+			this->port = port;														//Port# set in main during object instantiation, by the CLA
 		}
-	
+
+
+		//Constructor (3)
+		//Same as above, but now its using a single int to set the address (no bit-shifting bullcrap)
 		Address( unsigned int address, unsigned short port )
 		{
 			this->address = address;
 			this->port = port;
 		}
-	
+
+
 		unsigned int GetAddress() const
 		{
 			return address;
@@ -164,15 +193,15 @@ namespace net
 		unsigned short port;
 	};
 
-	// sockets
 
+
+#pragma region Sockets 
 	inline bool InitializeSockets()
 	{
 		#if PLATFORM == PLATFORM_WINDOWS
 		bool isValid = true;
-		int result = 0;
 	    WSADATA WsaData;
-		result = WSAStartup(MAKEWORD(2, 2), &WsaData);
+		int result = WSAStartup(MAKEWORD(2, 2), &WsaData);
 		if (result != 0)
 		{
 			isValid = false;
@@ -272,7 +301,9 @@ namespace net
 				socket = 0;
 			}
 		}
-	
+
+
+		//
 		bool IsOpen() const
 		{
 			return socket != 0;
@@ -298,14 +329,15 @@ namespace net
 
 			return sent_bytes == size;
 		}
-	
+
+
+		//
 		int Receive( Address & sender, void * data, int size )
 		{
 			assert( data );
 			assert( size > 0 );
 		
-			if ( socket == 0 )
-				return false;
+			if ( socket == 0 ) return false;
 			
 			#if PLATFORM == PLATFORM_WINDOWS
 			typedef int socklen_t;
@@ -316,8 +348,7 @@ namespace net
 
 			int received_bytes = recvfrom( socket, (char*)data, size, 0, (sockaddr*)&from, &fromLength );
 
-			if ( received_bytes <= 0 )
-				return 0;
+			if ( received_bytes <= 0 ) return 0;
 
 			unsigned int address = ntohl( from.sin_addr.s_addr );
 			unsigned short port = ntohs( from.sin_port );
@@ -331,20 +362,36 @@ namespace net
 	
 		int socket;
 	};
-	
-	// connection
-	
+
+
+
+#pragma endregion
+#pragma region ConnectionClass
+
+
+
+	/*
+	 *
+	 *
+	 *
+	 */
 	class Connection
 	{
+
 	public:
-		
+
+
+		//User to set the applications current networking configuration
+		//NOTE: main() also uses the client/server enum for controlling its execution
 		enum Mode
 		{
 			None,	
 			Client,
 			Server
 		};
-		
+
+
+		//Constructor (1)
 		Connection( unsigned int protocolId, float timeout )
 		{
 			this->protocolId = protocolId;
@@ -353,13 +400,17 @@ namespace net
 			running = false;
 			ClearData();
 		}
-		
+
+
+		//Destructor
 		virtual ~Connection()
 		{
 			if ( IsRunning() )
 				Stop();
 		}
-		
+
+
+
 		bool Start( int port )
 		{
 			assert( !running );
@@ -563,7 +614,10 @@ namespace net
 		float timeoutAccumulator;
 		Address address;
 	};
-	
+#pragma endregion
+
+
+
 	// packet queue to store information about sent and received packets sorted in sequence order
 	//  + we define ordering using the "sequence_more_recent" function, this works provided there is a large gap when sequence wrap occurs
 	
@@ -583,7 +637,15 @@ namespace net
         (( s2 > s1 ) && ( s2 - s1 > half_max ))
     );
 	}		
-	
+
+
+	#pragma region PacketQueueClass 
+
+
+	/*
+	 *
+	 *
+	 */
 	class PacketQueue : public std::list<PacketData>
 	{
 	public:
@@ -641,6 +703,8 @@ namespace net
 			}
 		}
 	};
+	#pragma endregion
+
 
 	// reliability system to support reliable connection
 	//  + manages sent, received, pending ack and acked packet queues
@@ -969,12 +1033,16 @@ namespace net
 		PacketQueue ackedQueue;				// acked packets (kept until rtt_maximum * 2)
 	};
 
-	// connection with reliability (seq/ack)
 
+
+	// connection with reliability (seq/ack)
 	class ReliableConnection : public Connection
 	{
+
 	public:
-		
+
+
+		//Constructor
 		ReliableConnection( unsigned int protocolId, float timeout, unsigned int max_sequence = 0xFFFFFFFF )
 			: Connection( protocolId, timeout ), reliabilitySystem( max_sequence )
 		{
@@ -986,12 +1054,12 @@ namespace net
 	
 		~ReliableConnection()
 		{
+
 			if ( IsRunning() )
 				Stop();
 		}
 		
-		// overriden functions from "Connection"
-				
+		// overriden functions from "Connection"	
 		bool SendPacket( const unsigned char data[], int size )
 		{
 			#ifdef NET_UNIT_TEST
@@ -1010,7 +1078,7 @@ namespace net
 			unsigned int ack = reliabilitySystem.GetRemoteSequence();
 			unsigned int ack_bits = reliabilitySystem.GenerateAckBits();
 			WriteHeader( packet, seq, ack, ack_bits );
-      std::memcpy( packet + header, data, size );
+			memcpy( packet + header, data, size );
  			if ( !Connection::SendPacket( packet, size + header ) )
 				return false;
 			reliabilitySystem.PacketSent( size );
