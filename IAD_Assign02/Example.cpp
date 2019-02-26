@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include "Net.h"
+#include "SendAndReceive.h"
 #pragma warning(disable: 4996)
 
 
@@ -223,7 +224,10 @@ int main( int argc, char * argv[] )
 	float sendAccumulator = 0.0f;
 	float statsAccumulator = 0.0f;
 	FlowControl flowControl;
-	
+	SendAndReceive sendAndReceive;
+	//sendAndReceive.SetReceivingbytes(1, 0);
+	//int byte = sendAndReceive.GetReceivingbytes(0);
+	//printf("%d",byte);
 
 	//Only way to stop loop is with breaks
 	while ( true )
@@ -282,7 +286,7 @@ int main( int argc, char * argv[] )
 		
 		while ( sendAccumulator > 1.0f / sendRate )
 		{
-			unsigned char packet[PacketSize];
+			unsigned char packet[PacketSize] = "test";
 			memset( packet, 0, sizeof( packet ) );
 			connection.SendPacket( packet, sizeof( packet ) );
 			sendAccumulator -= 1.0f / sendRate;
@@ -292,8 +296,10 @@ int main( int argc, char * argv[] )
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket( packet, sizeof(packet) );
-			if ( bytes_read == 0 )
+			if (bytes_read == 0)
 				break;
+			else
+				printf("%d", bytes_read);
 		}
 		
 		// show packets that were acked this frame

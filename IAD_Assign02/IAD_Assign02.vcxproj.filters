@@ -24,9 +24,15 @@
     <ClCompile Include="TestMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SendAndReceive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SendAndReceive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
