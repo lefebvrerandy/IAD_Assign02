@@ -156,6 +156,25 @@ private:
 #pragma endregion
 
 
+//void printServerProperties(void)
+//{
+//	char hostbuffer[200];
+//	char *IPbuffer;
+//	struct hostent *host_entry;
+//	int hostname;
+//	char hostPort[4];
+//	strcpy(hostPort, "3000");
+//	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+//	host_entry = gethostbyname(hostbuffer);
+//	IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
+//
+//
+//	//Print the servers details
+//	printf("Hostname: %s\n", hostbuffer);
+//	printf("Host IP: %s\n", IPbuffer);
+//	printf("Port: %s\n", hostPort);
+//}
+
 
 #pragma region Main
 int main( int argc, char * argv[] )
@@ -216,6 +235,7 @@ int main( int argc, char * argv[] )
 	else
 	{
 		connection.Listen();			//If the app is not in client mode, then start listening on the socket created above
+		//printServerProperties();
 	}
 		
 
@@ -286,8 +306,9 @@ int main( int argc, char * argv[] )
 		
 		while ( sendAccumulator > 1.0f / sendRate )
 		{
-			unsigned char packet[PacketSize] = "test";
+			unsigned char packet[PacketSize];
 			memset( packet, 0, sizeof( packet ) );
+			//packet[PacketSize] = (unsigned char)"test" ;
 			connection.SendPacket( packet, sizeof( packet ) );
 			sendAccumulator -= 1.0f / sendRate;
 		}

@@ -123,6 +123,7 @@ namespace net
 			 *	
 			 */
 			this->address = ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | d;				//Bitwise shift operators used to set the unsigned int "address" field
+
 			this->port = port;														//Port# set in main during object instantiation, by the CLA
 		}
 
@@ -549,6 +550,7 @@ namespace net
 				 packet[2] != (unsigned char) ( ( protocolId >> 8 ) & 0xFF ) ||
 				 packet[3] != (unsigned char) ( protocolId & 0xFF ) )
 				return 0;
+//
 			if ( mode == Server && !IsConnected() )
 			{
 				printf( "server accepts connection from client %d.%d.%d.%d:%d\n", 
@@ -557,6 +559,7 @@ namespace net
 				address = sender;
 				OnConnect();
 			}
+//
 			if ( sender == address )
 			{
 				if ( mode == Client && state == Connecting )
