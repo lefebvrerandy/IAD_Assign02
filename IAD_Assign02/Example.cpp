@@ -4,11 +4,10 @@
 *	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
+
+
 #include "Net.h"
+#include "FileIO.h"
 #include "SendAndReceive.h"
 #pragma warning(disable: 4996)
 
@@ -31,9 +30,6 @@ const int PacketSize = 256;
 
 
 #pragma region FlowControl
-
-
-
 /*
  * Best way I can describe the class, is as an indicator of network performance. The class never directly interacts with the sockets, Address, or the underlying networking module.
  * - It sits in main, and signals the applications network performance by setting it's mode between "Good" or "Bad" every time it's Update method is called. 
@@ -183,6 +179,16 @@ int main( int argc, char * argv[] )
 	enum Mode{ Client, Server};			//Local enumerable for defining the state of the client and server
 	Mode operatingMode = Server;		//Default to server operating mode, unless specified by the CLA
 	Address address;					//We will use this for holding an address, and for controlling the sockets
+
+
+	//I read online that a string data type is suitable for storing the contents of a binary file. Just don't expect
+	//	it to behave like a C-style string, and we're good
+	FileIO fileReader;
+	string fileContents = FileIO::ReadAsciiFile("Test.txt");
+	fileContents = FileIO::ReadBinaryFile("Test.dat");
+	fileContents = FileIO::ReadBinaryFile("pubg.exe");
+	fileContents = FileIO::ReadBinaryFile("Test.exe");
+
 
 
 	/*

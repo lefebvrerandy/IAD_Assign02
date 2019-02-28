@@ -3,15 +3,17 @@
 	http://www.gaffer.org/networking-for-game-programmers
 	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
-#ifndef NET_H
-#define NET_H
 
-
+#pragma once
 #include <cstring>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
+#include <assert.h>
+#include <vector>
+#include <list>
+#include <functional>
+
 
 
 //Prototypes
@@ -63,16 +65,6 @@ void tests();
 	#error unknown platform!
 
 #endif
-
-
-#include <assert.h>
-#include <vector>
-#include <map>
-#include <stack>
-#include <list>
-#include <algorithm>
-#include <functional>
-
 namespace net
 {
 	// platform independent wait for n seconds
@@ -638,12 +630,12 @@ namespace net
 
 	inline bool sequence_more_recent( unsigned int s1, unsigned int s2, unsigned int max_sequence )
 	{
-    auto half_max = max_sequence / 2;
-		return (
-        (( s1 > s2 ) && ( s1 - s2 <= half_max ))
-        ||
-        (( s2 > s1 ) && ( s2 - s1 > half_max ))
-    );
+	    auto half_max = max_sequence / 2;
+			return (
+	        (( s1 > s2 ) && ( s1 - s2 <= half_max ))
+	        ||
+	        (( s2 > s1 ) && ( s2 - s1 > half_max ))
+	    );
 	}		
 
 
@@ -772,8 +764,7 @@ namespace net
 		void PacketReceived( unsigned int sequence, int size )
 		{
 			recv_packets++;
-			if ( receivedQueue.exists( sequence ) )
-				return;
+			if ( receivedQueue.exists( sequence ) ) return;
 			PacketData data;
 			data.sequence = sequence;
 			data.time = 0.0f;
@@ -1097,24 +1088,39 @@ namespace net
 		int ReceivePacket( unsigned char data[], int size )
 		{
 			const int header = 12;
-			if ( size <= header )
+			if (size <= header)
+			{
 				return false;
+			}
+
 			// Changed 
 			//unsigned char packet[header + size];
 			unsigned char* packet = (unsigned char*)malloc(size + header);
 			// end changed
-			int received_bytes = Connection::ReceivePacket( packet, size + header );
-			if ( received_bytes == 0 )
-				return false;
-			if ( received_bytes <= header )
-				return false;
+
+			//
+			int received_bytes = Connection::ReceivePacket(packet, size + header);
+			
+
+			//
+			if ( received_bytes == 0 )		return false;
+			if ( received_bytes <= header ) return false;
 			unsigned int packet_sequence = 0;
 			unsigned int packet_ack = 0;
 			unsigned int packet_ack_bits = 0;
+			
+			
+			//
 			ReadHeader( packet, packet_sequence, packet_ack, packet_ack_bits );
 			reliabilitySystem.PacketReceived( packet_sequence, received_bytes - header );
 			reliabilitySystem.ProcessAck( packet_ack, packet_ack_bits );
-			std::memcpy( data, packet + header, received_bytes - header );
+			
+			
+			//
+			memcpy( data, packet + header, received_bytes - header );
+
+
+			//
 			free(packet);
 			return received_bytes - header;
 		}
@@ -1198,5 +1204,3 @@ namespace net
 		ReliabilitySystem reliabilitySystem;	// reliability system: manages sequence numbers and acks, tracks network stats etc.
 	};
 }
-
-#endif
