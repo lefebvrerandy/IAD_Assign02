@@ -118,16 +118,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Example.cpp" />
+    <ClCompile Include="client.c" />
     <ClCompile Include="FileIO.cpp" />
-    <ClCompile Include="SendAndReceive.cpp" />
-    <ClCompile Include="TestHarness.cpp" />
-    <ClCompile Include="TestMethods.cpp" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="PacketQueue.cpp" />
+    <ClCompile Include="ReliableConnection.cpp" />
+    <ClCompile Include="server.c" />
+    <ClCompile Include="shared.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="client.h" />
     <ClInclude Include="FileIO.h" />
-    <ClInclude Include="Net.h" />
+    <ClInclude Include="Network.h" />
+    <ClInclude Include="PacketQueue.h" />
+    <ClInclude Include="ReliableConnection.h" />
     <ClInclude Include="SendAndReceive.h" />
+    <ClInclude Include="server.h" />
+    <ClInclude Include="shared.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

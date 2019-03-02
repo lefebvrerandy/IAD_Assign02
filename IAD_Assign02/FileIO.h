@@ -1,20 +1,23 @@
-﻿
+﻿/*
+*  FILE          : DEBUG
+*  PROJECT       : DEBUG
+*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  FIRST VERSION : DEBUG
+*  DESCRIPTION   : DEBUG
+*/
 
 
 #ifndef FILEIO_H
 #define FILEIO_H
 #pragma once
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "shared.h"
 using namespace std;
 
-
 /*
- * CLASS		:
- * DESCRIPTION	:
+ * CLASS		: FileIO
+ * DESCRIPTION	: This class is used to read in data from the specified file path, as a binary, or ASCII file.
  */
-class FileIO
+class FileIO final
 {
 	static fstream* file;
 	static fstream* GetFileStream();

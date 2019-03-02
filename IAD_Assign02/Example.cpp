@@ -186,7 +186,6 @@ int main( int argc, char * argv[] )
 	FileIO fileReader;
 	string fileContents = FileIO::ReadAsciiFile("Test.txt");
 	fileContents = FileIO::ReadBinaryFile("Test.dat");
-	fileContents = FileIO::ReadBinaryFile("pubg.exe");
 	fileContents = FileIO::ReadBinaryFile("Test.exe");
 
 
@@ -310,28 +309,48 @@ int main( int argc, char * argv[] )
 		// send and receive packets
 		
 		sendAccumulator += DeltaTime;
-		
-		while ( sendAccumulator > 1.0f / sendRate )
+
+
+		/*
+		* If connection == Good, then sendRate is 30
+		* If connection == Bad, then sendRate is 10
+		* Thus, if the connection is Good, send the packets more often
+		*/
+		while ( sendAccumulator > 1.0f / sendRate )		
 		{
+
+
 			unsigned char packet[PacketSize];
 			memset( packet, 0, sizeof( packet ) );
+
+			//Empty packets need to be filled with the contents of the file
 			//packet[PacketSize] = (unsigned char)"test" ;
-			connection.SendPacket( packet, sizeof( packet ) );
-			sendAccumulator -= 1.0f / sendRate;
+			connection.SendPacket(packet, sizeof( packet ));
+
+			/* 
+			 * Reduce the sendAcumulator according to the connection status
+			 * Good connections will reduce the sendAccumulator to a lower degree, thus
+			 * triggering the "while ( sendAccumulator > 1.0f / sendRate )" statement more often 
+			 */	
+			sendAccumulator -= (1.0f / sendRate);
 		}
 		
 		while ( true )
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket( packet, sizeof(packet) );
-			if (bytes_read == 0)
-				break;
-			else
-				printf("%d", bytes_read);
+			
+			
+			/*
+			 * ReceivePacket() will always return 0 if there is an error with the recv command, OR if the socket is empty
+			 * and all messaged have already been received. Otherwise, print the result of the recv
+			 */
+			if (bytes_read == 0) break;
+			else printf("%d", bytes_read);
 		}
 		
-		// show packets that were acked this frame
-		
+
+		//show packets that were acked this frame
 		#ifdef SHOW_ACKS
 		unsigned int * acks = NULL;
 		int ack_count = 0;
