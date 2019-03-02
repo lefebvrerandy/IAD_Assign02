@@ -119,16 +119,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="client.c" />
+    <ClCompile Include="Example.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="main.c" />
     <ClCompile Include="PacketQueue.cpp" />
     <ClCompile Include="ReliableConnection.cpp" />
+    <ClCompile Include="SendAndReceive.cpp" />
     <ClCompile Include="server.c" />
     <ClCompile Include="shared.c" />
+    <ClCompile Include="TestHarness.cpp" />
+    <ClCompile Include="TestMethods.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client.h" />
     <ClInclude Include="FileIO.h" />
+    <ClInclude Include="Net.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketQueue.h" />
     <ClInclude Include="ReliableConnection.h" />

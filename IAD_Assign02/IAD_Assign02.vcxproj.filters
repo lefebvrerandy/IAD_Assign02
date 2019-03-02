@@ -39,6 +39,18 @@
     <ClCompile Include="PacketQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestMethods.cpp">
+      <Filter>SourceCopy</Filter>
+    </ClCompile>
+    <ClCompile Include="TestHarness.cpp">
+      <Filter>SourceCopy</Filter>
+    </ClCompile>
+    <ClCompile Include="Example.cpp">
+      <Filter>SourceCopy</Filter>
+    </ClCompile>
+    <ClCompile Include="SendAndReceive.cpp">
+      <Filter>SourceCopy</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileIO.h">
@@ -65,12 +77,15 @@
     <ClInclude Include="PacketQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="TestFiles\Test.txt" />
+    <ClInclude Include="Net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="TestFiles\Test.dat" />
     <None Include="TestFiles\Test.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TestFiles\Test.txt" />
   </ItemGroup>
 </Project>
