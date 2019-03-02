@@ -66,4 +66,11 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="TestFiles\Test.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestFiles\Test.dat" />
+    <None Include="TestFiles\Test.exe" />
+  </ItemGroup>
 </Project>
