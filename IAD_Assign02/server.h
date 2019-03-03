@@ -6,11 +6,7 @@
 *  DESCRIPTION   : This file contains the function prototypes used by the server application to execute it's functionality in full.
 */
 
-#if defined _WIN32
 #include "shared.h"
-#elif defined __linux__
-#include "../inc/shared.h"
-#endif
 
 #pragma comment (lib, "ws2_32.lib")
 

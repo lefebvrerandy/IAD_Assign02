@@ -46,16 +46,8 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 */
 void sendMessage(SOCKET connectedSocket, char messageBuffer[], int typeOfConnection, const struct sockaddr_in socketAddress)
 {
-	if (typeOfConnection == NETWORK_TYPE_TCP)
-	{
-		send(connectedSocket, messageBuffer, strlen(messageBuffer), 0);
-	}
-	else
-	{
-		int len = sizeof(socketAddress);
-		sendto(connectedSocket, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
-	}
-
+	int len = sizeof(socketAddress);
+	sendto(connectedSocket, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
 }
 
 

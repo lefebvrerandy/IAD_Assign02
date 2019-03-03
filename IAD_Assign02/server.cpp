@@ -8,11 +8,8 @@
 *				   messages from the clients
 */
 
-#if defined _WIN32
+
 #include "server.h"
-#elif defined __linux__
-#include "../inc/server.h"
-#endif
 
 
 
@@ -82,17 +79,18 @@ int start_server()
 int start_server_protocol(int* tcpOrUdp)
 {
 	
-	struct timeval timeout = {				//Tracks socket timeout
+	struct timeval timeout = {				
 		.tv_sec = 5,						//5 second timeout
 		.tv_usec = 0
-	};
+	};//Tracks socket timeout
 
-	NetworkResults messageData = {			//Tracks the networks status based on the 
+	NetworkResults messageData = 
+	{			
 		.blocksReceivedCount = 0,
 		.missingBlockCount = 0,
 		.disorganizedBlocksCount = 0,
 		.blocksReceivedList = {0}
-	};
+	};//Tracks the networks status based on the 
 
 	MessageProperties protocol = {			//Tracks message properties
 		.blockSize = 0,
@@ -199,7 +197,7 @@ int start_server_protocol(int* tcpOrUdp)
 		protocol.blockSize = getBlockSize(messageBuffer);
 		protocol.blockCount = getNumberOfBlocks(messageBuffer);
 		int freeIndex = 0;
-		char* resizedBuffer = malloc(sizeof(char) * protocol.blockSize);
+		char* resizedBuffer = (char*)malloc(sizeof(char) * protocol.blockSize);
 		while (true)
 		{
 
@@ -557,7 +555,7 @@ void printError(int errorCode)
 long getBlockSize(char messageBuffer[])
 {
 	//Get the block size sub string from the message
-	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
+	char* messageProperties = (char*)malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
 	int index = 0;
 	for (index = 0; index < BLOCK_SIZE_LENGTH; index++)								
 	{

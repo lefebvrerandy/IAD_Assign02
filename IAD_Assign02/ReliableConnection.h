@@ -1,11 +1,20 @@
 ﻿#pragma once
 #include "shared.h"
-#include "ReliabilitySystem.h"
+//#include "ReliableConnection.h"
 
 
 
 class ReliableConnection
 {
+
+private:
+
+	unsigned int protocolId;				//Set in main as 0x11223344
+	float timeoutLimit;						//Set in main as 5 seconds
+	State state;							//Indicates the connection state as 0 (Disconnected) - 4 (Connected)
+	float timeoutCounter;					//Tracks the elapsed time Update() and ReceivePacket() calls  
+	ReliabilitySystem reliabilitySystem;	//Manages sequence numbers and acks, tracks network stats etc.
+
 public:
 
 	//Constructor
@@ -68,6 +77,7 @@ public:
 		//
 		reliabilitySystem.PacketSent(messageSize);
 		free(packet);
+		free(messageContainer);
 		return true;
 	}
 
@@ -255,15 +265,6 @@ public:
 	ReliabilitySystem& GetReliabilitySystem() { return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
 	void OnStop() { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
 	void OnDisconnect() { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-
-
-private:
-
-	unsigned int protocolId;				//Set in main as 0x11223344
-	float timeoutLimit;						//Set in main as 5 seconds
-	State state;							//Indicates the connection state as 0 (Disconnected) - 4 (Connected)
-	float timeoutCounter;					//Tracks the elapsed time Update() and ReceivePacket() calls  
-	ReliabilitySystem reliabilitySystem;	//Manages sequence numbers and acks, tracks network stats etc.
 
 #pragma endregion
 };

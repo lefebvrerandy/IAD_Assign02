@@ -7,7 +7,6 @@
 
 inline bool InitializeSockets()
 {
-#if PLATFORM == PLATFORM_WINDOWS
 	bool isValid = true;
 	WSADATA WsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &WsaData);
@@ -16,36 +15,29 @@ inline bool InitializeSockets()
 		isValid = false;
 	}
 	return isValid;
-#else
-	return true;
-#endif
 }
 
 inline void ShutdownSockets()
 {
-	#if PLATFORM == PLATFORM_WINDOWS
-		WSACleanup();
-	#endif
+	WSACleanup();
 }
 
 #pragma endregion
+
+
 #pragma region SocketClass
 
 
 inline bool open()
 {
 	//set non-blocking io
-	#if PLATFORM == PLATFORM_WINDOWS
-
-		DWORD nonBlocking = 1;
-		if (ioctlsocket(socket, FIONBIO, &nonBlocking) != 0)
-		{
-			printf("failed to set non-blocking socket\n");
-			Close();
-			return false;
-		}
-
-	#endif
+	DWORD nonBlocking = 1;
+	if (ioctlsocket(socket, FIONBIO, &nonBlocking) != 0)
+	{
+		printf("failed to set non-blocking socket\n");
+		Close();
+		return false;
+	}
 
 	return true;
 }
@@ -86,6 +78,7 @@ int Receive(void * data, int size)
 
 #pragma endregion
 
+
 #pragma region PacketDataStruct 
 
 	// packet queue to store information about sent and received packets sorted in sequence order
@@ -110,6 +103,8 @@ int Receive(void * data, int size)
 		}
 
 #pragma endregion
+
+
 #pragma region PacketQueueClass 
 
 		class PacketQueue : public list<PacketData>

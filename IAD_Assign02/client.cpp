@@ -8,14 +8,8 @@
 *				   to and from the server
 */
 
-#if defined _WIN32
 #include "client.h"
 #include "FileIO.h"
-
-
-#elif defined __linux__
-#include "../inc/client.h"
-#endif
 
 
 
@@ -82,13 +76,8 @@ int start_client_protocol(string filePath, int stream_or_datagram, int tcp_or_ud
 	currentblockCount++;
 
 
-	#if defined _WIN32
 	stopwatch.endTime = GetTickCount();								//Stop the Windows timer
 
-	#elif defined __linux__
-	stopwatch.endTime = stopWatch();								//Stop the UNIX timer
-
-	#endif
 	stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
 
 
@@ -96,7 +85,7 @@ int start_client_protocol(string filePath, int stream_or_datagram, int tcp_or_ud
 	struct sockaddr_in sender_addr;
 	len = sizeof(sender_addr);
 	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
+	recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 	free(messageBuffer);
 
 

@@ -14,7 +14,7 @@
 
 
 //Standard C headers
-#include <string.h>
+//#include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -23,34 +23,15 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <list>
+#include <assert.h>
 
 
-//OS Dependent Headers
-#if defined _WIN32
 #include <winsock2.h>		//Windows socket operations
 #include <WS2tcpip.h>
 #include <windows.h>		//Windows API for 32/64 bit application
-#elif defined __linux__	
-#include <unistd.h>			//UNIX POSIX operating system API
-#include <netdb.h>			//UNIX network database operations
-#include <sys/types.h>		//UNIX clock & threading operations
-#include <sys/socket.h>		//UNIX socket operations
-#include <sys/select.h>		//UNIX socket operations
-#include <arpa/inet.h>		//UNIX internet operations
-#include <pthread.h>		//UNIX threading operations
-#include <poll.h>
-#endif
 
-
-//Redefine some types and constants based on OS
-#if defined _WIN32
-#elif defined __linux__
-typedef int SOCKET;
-	#define INVALID_SOCKET -1			// WinSock invalid socket
-	#define SOCKET_ERROR   -1			// basic WinSock error
-	#define closesocket(s) close(s);	// Unix uses file descriptors, WinSock doesn't...
-#endif
-
+using namespace std;
 
 //Defined application constants
 #define MESSAGE_BUFFER_SIZE_10000	30000
@@ -142,15 +123,17 @@ enum State
 	Connected
 };
 
+enum Mode { Client, Server };			//Local enumerable for defining the state of the client and server
+
+Mode operatingMode;
+char ipAddress[10];
+char port[10];
 
 
 //Prototypes
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-void sendMessage(SOCKET connectedSocket, char messageBuffer[]);
+void sendMessage(SOCKET connectedSocket, char messageBuffer[], int typeOfConnection, const struct sockaddr_in socketAddress);
 int convertCharToInt(char* stringToConvert);
 int proc_arguments(int argumentCount, char* args[]);
 int validateAddress(char address[]);
-int validateBlockSize(char* blockSizeString);
-int validateNumOfBlocks(char* string);
-int validatePort(char* string);
 void printError(int errorCode);
