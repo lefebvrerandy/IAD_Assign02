@@ -8,15 +8,9 @@
 
 
 
-#if defined _WIN32
 #include "shared.h"
 #include "client.h"
 #include "server.h"
-#elif defined __linux__
-#include "../inc/shared.h"
-#include "../inc/client.h"
-#include "../inc/server.h"
-#endif
 
 /*
 *  FUNCTION      : createSocket
