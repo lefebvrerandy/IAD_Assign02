@@ -38,7 +38,7 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 *	int message[]			: Contains the entire message
 *  RETURNS       : void : has no return value
 */
-void sendMessage(SOCKET connectedSocket, char messageBuffer[], int typeOfConnection, const struct sockaddr_in socketAddress)
+void sendMessage(SOCKET connectedSocket, char messageBuffer[], const struct sockaddr_in socketAddress)
 {
 	int len = sizeof(socketAddress);
 	sendto(connectedSocket, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);

@@ -176,7 +176,7 @@ int validateAddress(char address[])
 	//Check if the address in the form of IPv4.
 	int errorCount = 0;
 	int IPaddressLength = strlen(address);
-	if (IPaddressLength == 32)											//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
+	if (IPaddressLength == 32)												//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
 	{
 		int index = 0;
 		for (index = 0; index < IPaddressLength; index++)
@@ -212,9 +212,8 @@ int validateAddress(char address[])
 
 	return addressValid;
 
-}//Done 
-//
-//
+} 
+
 ///*
 //*  FUNCTION      : validatePort
 //*  DESCRIPTION   : This function is used to check if the port CLA is valid
