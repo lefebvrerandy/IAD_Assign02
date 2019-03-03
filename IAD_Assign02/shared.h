@@ -25,6 +25,7 @@
 #include <string>
 #include <list>
 #include <assert.h>
+#include <vector>
 
 
 #include <winsock2.h>		//Windows socket operations

@@ -8,8 +8,11 @@
 *				   messages from the clients
 */
 
-
+#if defined _WIN32
 #include "server.h"
+#elif defined __linux__
+#include "../inc/server.h"
+#endif
 
 
 
@@ -79,18 +82,17 @@ int start_server()
 int start_server_protocol(int* tcpOrUdp)
 {
 	
-	struct timeval timeout = {				
+	struct timeval timeout = {				//Tracks socket timeout
 		.tv_sec = 5,						//5 second timeout
 		.tv_usec = 0
-	};//Tracks socket timeout
+	};
 
-	NetworkResults messageData = 
-	{			
+	NetworkResults messageData = {			//Tracks the networks status based on the 
 		.blocksReceivedCount = 0,
 		.missingBlockCount = 0,
 		.disorganizedBlocksCount = 0,
 		.blocksReceivedList = {0}
-	};//Tracks the networks status based on the 
+	};
 
 	MessageProperties protocol = {			//Tracks message properties
 		.blockSize = 0,
@@ -150,29 +152,13 @@ int start_server_protocol(int* tcpOrUdp)
 
 		// Only set the timer if we are using TCP port
 		fd_set readFDs;
-		if (TCPorUDP == IPPROTO_TCP)
+		FD_ZERO(&readFDs);							//Clear the file descriptor
+		FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
+		int socketSet = setsockopt(openSocketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+		if (!(socketSet >= 0))
 		{
-			//Stage 5A: Set the socket options (setsockopt) to have a timeout(seconds) set by struct timeval timeout
-			//NOTE: SO_RCVTIMEO is for setting the socket receive timeout; SOL_SOCKET is for setting options at the socket level
-			FD_ZERO(&readFDs);							//Clear the file descriptor
-			FD_SET(acceptedSocketConnection, &readFDs);	//Set the accepted socket as part of the file descriptor array
-			int socketSet = setsockopt(acceptedSocketConnection, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-			if (!(socketSet >= 0))
-			{
-				printError(SOCKET_SETTINGS_ERROR);
-				return SOCKET_SETTINGS_ERROR;		//Set return to -1, and print an error for the stage of connection
-			}
-		}
-		else
-		{
-			FD_ZERO(&readFDs);							//Clear the file descriptor
-			FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
-			int socketSet = setsockopt(openSocketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-			if (!(socketSet >= 0))
-			{
-				printError(SOCKET_SETTINGS_ERROR);
-				return SOCKET_SETTINGS_ERROR;		//Set return to -1, and print an error for the stage of connection
-			}
+			printError(SOCKET_SETTINGS_ERROR);
+			return SOCKET_SETTINGS_ERROR;		//Set return to -1, and print an error for the stage of connection
 		}
 
 		int len = sizeof(sender_addr);
@@ -182,14 +168,7 @@ int start_server_protocol(int* tcpOrUdp)
 		int recvStatus = 0;
 		while (recvStatus <= 0)
 		{
-			if (TCPorUDP == IPPROTO_TCP)
-			{
-				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-			}
-			else
-			{
-				recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
-			}
+			recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
 
 
@@ -206,43 +185,21 @@ int start_server_protocol(int* tcpOrUdp)
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 			memset((void*)resizedBuffer, 0, ((sizeof(char)) * protocol.blockSize));
 
-			//Clear the buffer and receive the next message if another one is still expected
-			if (TCPorUDP == IPPROTO_TCP)
+			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
+			if (!(selectResult > 0))
 			{
-				int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
-				if (!(selectResult > 0))
-				{
 
-					//Make one final recv() call to ensure the socket is indeed empty
-					recvStatus = recv(acceptedSocketConnection, resizedBuffer, ((sizeof(char)) * protocol.blockSize), MSG_WAITALL);
-					if (!(recvStatus > 0))
-					{
-						break;
-					}
-				}
-				else
+				//Make one final recv() call to ensure the socket is indeed empty
+				recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
+				if (!(recvStatus > 0))
 				{
-					recvStatus = recv(acceptedSocketConnection, resizedBuffer, ((sizeof(char)) * protocol.blockSize), MSG_WAITALL);
+					break;
 				}
 			}
 			else
 			{
-				memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-				int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
-				if (!(selectResult > 0))
-				{
-
-					//Make one final recv() call to ensure the socket is indeed empty
-					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (const struct sockaddr *)&sender_addr, &len);
-					if (!(recvStatus > 0))
-					{
-						break;
-					}
-				}
-				else
-				{
-					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (const struct sockaddr *)&sender_addr, &len);
-				}
+					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 			}
 			strcpy(messageBuffer, resizedBuffer);
 			freeIndex++;
@@ -255,37 +212,19 @@ int start_server_protocol(int* tcpOrUdp)
 		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);								//Sort the block ID's from lowest to highest
 		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);				//Get the number of blocks that were missing
 
-		if (TCPorUDP == IPPROTO_TCP)
-		{
-			sendResults(acceptedSocketConnection, messageData.missingBlockCount, messageData.disorganizedBlocksCount);
-		}
-		else
-		{
-			char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
-			packageResults(messageBuffer, messageData.missingBlockCount);
-			sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
-			packageResults(messageBuffer, messageData.disorganizedBlocksCount);
-			sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
-		}
-		#if defined _WIN32
-		if (TCPorUDP == IPPROTO_TCP)
-		{
-			closesocket(acceptedSocketConnection);
-		}
-		#elif defined __linux__
-		if (TCPorUDP == IPPROTO_TCP)
-		{
-			close(acceptedSocketConnection);
-		}
-		#endif
+
+		char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
+		packageResults(messageBuffer, messageData.missingBlockCount);
+		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
+		packageResults(messageBuffer, messageData.disorganizedBlocksCount);
+		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
+
 	} while (true);
 
 
-	#if defined _WIN32
-		closesocket(openSocketHandle);
-	#elif defined __linux__
-		close(openSocketHandle);
-	#endif
+
+	closesocket(openSocketHandle);
+
 	return SUCCESS;
 }
 
@@ -555,7 +494,7 @@ void printError(int errorCode)
 long getBlockSize(char messageBuffer[])
 {
 	//Get the block size sub string from the message
-	char* messageProperties = (char*)malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
+	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
 	int index = 0;
 	for (index = 0; index < BLOCK_SIZE_LENGTH; index++)								
 	{

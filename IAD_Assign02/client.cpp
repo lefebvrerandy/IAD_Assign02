@@ -90,11 +90,7 @@ int start_client_protocol(string filePath, int stream_or_datagram, int tcp_or_ud
 
 
 	//Close the sockets
-	#if defined _WIN32
-		closesocket(openSocketHandle);
-	#elif defined __linux__
-		close(openSocketHandle);
-	#endif
+	closesocket(openSocketHandle);
 	return SUCCESS;
 }
 
@@ -126,7 +122,7 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 	
-	char* returnArray = malloc(sizeof(char) * (bufferSize + 1));
+	char* returnArray = (char*)malloc(sizeof(char) * (bufferSize + 1));
 	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
 
 
@@ -143,50 +139,3 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 	fillMessageBuffer(returnArray, bufferSize, propertyLength);					
 	return returnArray;
 }
-
-
-#if defined __linux__
-/*
-*  FUNCTION      : stopWatch
-*  DESCRIPTION   : This function is used to get the number of milliseconds since the Epoch  (Jan 1, 1970)
-*  PARAMETERS    : void: The function takes no arguments
-*  RETURNS       : long : Returns the current microsecond count
-*
-*	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs.
-*		   As a result, credit belongs to the original author on the website. For more information, please see the reference,
-*		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019, from 
-				https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
-*/
-double stopWatch(void)
-{
-	//struct contains the following fields:
-	/*
-		struct timeval {
-			time_t      tv_sec;     //seconds
-			suseconds_t tv_usec;    //microseconds
-		};
-	*/
-
-	struct timeval time;
-	if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
-	{
-		return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
-	}
-	return ERROR_RETURN;
-
-}
-
-
-/*
-*  FUNCTION      : calculateElapsedTime
-*  DESCRIPTION   : This function is used to calculate the elapsed time for message transmission between the networked clients and server
-*  PARAMETERS    : long startTime : Start time for when the transmission began
-*				   long endTime	  : End time for when the transmission had finished
-*  RETURNS       : double : Returns the elapsedTime time between the two values
-*/
-double calculateElapsedTime(long startTime, long endTime)
-{
-	return (endTime - startTime);
-
-}
-#endif
