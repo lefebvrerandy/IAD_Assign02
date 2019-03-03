@@ -10,6 +10,7 @@
 
 #include "client.h"
 #include "FileIO.h"
+#include "ReliableConnection.h"
 
 
 
@@ -49,46 +50,56 @@ int start_client_protocol(const string filePath, const int stream_or_datagram, c
 		return SOCKET_CONNECTION_ERROR;
 	}
 
+	ReliableConnection reliableConn(ProtocolId, TimeOut);
+	reliableConn.connectedSocket = boundSocketHandle;
+	reliableConn.socketAddressDEBUG = socketAddress;
+
+
 
 	//Stage 4: Read in the file determined by the CLA
-	string binaryFileContents = FileIO::ReadBinaryFile(filePath);
+	bool binaryFileReadError  = false; 
+	string binaryFileContents = FileIO::ReadBinaryFile(filePath); 
+	if (binaryFileContents.empty)
+	{
+		binaryFileReadError = true;
+		binaryFileContents = "Error: Binary file read error";
+	}
+
+	bool asciiFileReadError = false;
 	string asciiFileContents = FileIO::ReadAsciiFile(filePath);
-	if ((binaryFileContents.empty) || (asciiFileContents.empty))
+	if (asciiFileContents.empty)
+	{
+		asciiFileReadError = true;
+		asciiFileContents = "Error: Ascii file read error";
+	}
+	if ((binaryFileReadError) && (asciiFileReadError))
 	{
 		printError(FILE_READ_ERROR);
 		return FILE_READ_ERROR;
 	}
 
-#pragma region DEBUGtimer
-	//Stage 5: Start the timer
-	//Timer stopwatch;
-	//stopwatch.startTime = GetTickCount();
-	//stopwatch.endTime = GetTickCount();
-	//stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
-#pragma endregion
 
 	try
 	{
 		int len = sizeof(socketAddress);
-		char* messageBuffer;
-		messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
-		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
-		//sendMessage(openSocketHandle, messageBuffer, NETWORK_TYPE_UDP, recipient_addr);	//Send the blocks across the network
+		unsigned char* messageBuffer;
+		//CreateMessageBuffer();
+		reliableConn.SendPacket(messageBuffer, sizeof(messageBuffer), socketAddress, len);
 
 
 		//Stage 7: Receive the missing blocks results from the server
 		struct sockaddr_in sender_addr;
-		len = sizeof(sender_addr);
 		memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-		recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
+		reliableConn.ReceivePacket(messageBuffer, sizeof(messageBuffer), socketAddress);
 		free(messageBuffer);
 		throw new exception;
 	}
 	catch (...)
 	{
-		//Close the sockets
+
 		try
 		{
+			//Close the sockets
 			closesocket(openSocketHandle);
 		}
 		catch (...) {}
@@ -121,7 +132,7 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 *	int currentMsgNum	: Current message ID that will be converted to hex
 *  RETURNS       : char* : The function has no return value
 */
-char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
+unsigned char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 	
 	unsigned char* returnArray = (unsigned char*) malloc(sizeof(char) * (bufferSize + 1));
@@ -129,11 +140,22 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 
 
 	//Set the message buffer's properties
-	setMessageProperties(messageProperties, bufferSize, numberOfBlocks, currentMsgNum);
-	strcpy(returnArray, messageProperties);
-	
+	//setMessageProperties(messageProperties, bufferSize, numberOfBlocks, currentMsgNum);
+	//strcpy(returnArray, messageProperties);
+	//
 
-	//Find the amount of space occupied by the message properties, and offset the index
-	int propertyLength = strlen(returnArray);	
+	////Find the amount of space occupied by the message properties, and offset the index
+	//int propertyLength = strlen(returnArray);	
 	return returnArray;
 }
+
+
+#pragma region DEBUGtimer
+//Stage 5: Start the timer
+//Timer stopwatch;
+//stopwatch.startTime = GetTickCount();
+//stopwatch.endTime = GetTickCount();
+//stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
+#pragma endregion
+
+//sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);

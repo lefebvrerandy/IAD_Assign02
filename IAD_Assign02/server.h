@@ -6,27 +6,11 @@
 *  DESCRIPTION   : This file contains the function prototypes used by the server application to execute it's functionality in full.
 */
 
+
+#pragma once
+#pragma comment (lib, "ws2_32.lib")
 #include "shared.h"
 
-#pragma comment (lib, "ws2_32.lib")
-
-
-//Struct containing the message properties as set by the clients CLA's
-typedef struct {
-	long blockSize;
-	int blockCount;
-
-}MessageProperties;
-
-
-//Struct used to track the networks performance
-typedef struct {
-	int blocksReceivedCount;
-	int missingBlockCount;
-	int disorganizedBlocksCount;
-	int blocksReceivedList[MESSAGE_BUFFER_SIZE_10000];
-
-}NetworkResults;
 
 
 //Function prototypes

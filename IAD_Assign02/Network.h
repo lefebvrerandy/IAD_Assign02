@@ -11,73 +11,6 @@
 #include "client.h"
 #include "server.h"
 
-
-//inline bool InitializeSockets()
-//{
-//	bool isValid = true;
-//	WSADATA WsaData;
-//	int result = WSAStartup(MAKEWORD(2, 2), &WsaData);
-//	if (result != 0)
-//	{
-//		isValid = false;
-//	}
-//	return isValid;
-//}
-//
-//inline void ShutdownSockets()
-//{
-//	WSACleanup();
-//}
-
-//inline bool open()
-//{
-//	//set non-blocking io
-//	DWORD nonBlocking = 1;
-//	if (ioctlsocket(socket, FIONBIO, &nonBlocking) != 0)
-//	{
-//		printf("failed to set non-blocking socket\n");
-//		Close();
-//		return false;
-//	}
-//
-//	return true;
-//}
-//
-//bool Send(const Address & destination, const void * data, int size)
-//{
-//
-//	if (socket == 0) return false;
-//	sockaddr_in address;
-//	address.sin_family = AF_INET;
-//	address.sin_addr.s_addr = htonl(destination.GetAddress());
-//	address.sin_port = htons((unsigned short)destination.GetPort());
-//
-//	int sent_bytes = sendto(socket, (const char*)data, size, 0, (sockaddr*)&address, sizeof(sockaddr_in));
-//
-//	return sent_bytes == size;
-//}
-//
-//
-//
-//int Receive(void * data, int size)
-//{
-//	#if PLATFORM == PLATFORM_WINDOWS
-//		typedef int socklen_t;
-//	#endif
-//
-//	sockaddr_in from;
-//	socklen_t fromLength = sizeof(from);
-//
-//	int received_bytes = recvfrom(socket, (char*)data, size, 0, (sockaddr*)&from, &fromLength);
-//
-//	if (received_bytes <= 0) return 0;
-//
-//	unsigned int address = ntohl(from.sin_addr.s_addr);
-//	unsigned short port = ntohs(from.sin_port);
-//	return received_bytes;
-//}
-
-
 // packet queue to store information about sent and received packets sorted in sequence order
 //  + we define ordering using the "sequence_more_recent" function, this works provided there is a large gap when sequence wrap occurs
 inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int max_sequence)
@@ -332,7 +265,7 @@ inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int 
 
 			static void process_ack(unsigned int ack, unsigned int ack_bits,
 				PacketQueue & pending_ack_queue, PacketQueue & acked_queue,
-				vector<unsigned int> & acks, unsigned int & acked_packets,
+				std::vector<unsigned int> & acks, unsigned int & acked_packets,
 				float & rtt, unsigned int max_sequence)
 			{
 				if (pending_ack_queue.empty())return;

@@ -28,8 +28,9 @@ using namespace std;
 	#include <string>
 	#include <list>
 	#include <assert.h>
-
-
+	#include <vector>
+	#include <list>
+	#include <functional>
 	#include <winsock2.h>		//Windows socket operations
 	#include <WS2tcpip.h>
 	#include <windows.h>		//Windows API for 32/64 bit application
@@ -121,8 +122,14 @@ using namespace std;
 		[3][] = Size of buffer to send
 		[4][] = Number of blocks to send 
 	*/
+	
+	const int ProtocolId = 0x11223344;
+	const float DeltaTime = 1.0f / 30.0f;
+	const float SendRate = 1.0f / 30.0f;
+	const float TimeOut = 5.0f;
+	const int PacketSize = 256;
 
-
+	//
 	struct PacketData
 	{
 		unsigned int sequence;			// packet sequence number
@@ -163,7 +170,7 @@ using namespace std;
 
 
 	SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-	void sendMessage(SOCKET connectedSocket, char messageBuffer[], int typeOfConnection, const struct sockaddr_in socketAddress);
+	void sendMessage(SOCKET connectedSocket, char messageBuffer[], const struct sockaddr_in socketAddress);
 	int convertCharToInt(char* stringToConvert);
 	int proc_arguments(int argumentCount, char* args[]);
 	int validateAddress(char address[]);

@@ -50,7 +50,7 @@ public:
 	*	int messageSize : Size of the message in bytes
 	*  RETURNS       : bool : Returns true if the message as sent without error
 	*/
-	bool SendPacket(const unsigned char packetData[], int messageSize)
+	bool SendPacket(const unsigned char packetData[], int messageSize, struct sockaddr_in socketAddress, int len)
 	{
 		//RELIABLE_CONN_HEADER_SIZE is a global set to 12					
 		unsigned char* messageContainer = (unsigned char*)malloc(messageSize + RELIABLE_CONN_HEADER_SIZE);
@@ -82,7 +82,11 @@ public:
 
 		//Copy the message contents to the outbound packet, and wave that bitch goodbye
 		memcpy(&packet[4], messageContainer, messageSize);
-		if (Send(ipAddress/*DEBUG NEED TO SET THIS IN OUR APPLICATION*/, packet, messageSize + 4) == false) return false;
+		bool sendComplete = sendto(connectedSocket, (const char*)packet, messageSize + 4, 0, (const struct sockaddr*)&socketAddress, len);
+		if (!(sendComplete == true))
+		{
+			return false;
+		}
 
 
 		//
@@ -134,15 +138,14 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	int ReceivePacket(unsigned char data[], int bufferSize)
+	int ReceivePacket(unsigned char data[], int bufferSize, struct sockaddr_in socketAddress)
 	{
 		if (bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
 		unsigned char* packet = (unsigned char*)malloc(bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);	//Base header size set to 4
-		Address sender;
 
 
 		//Receive a message from the socket
-		int bytes_read = socket.Receive(sender, packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);
+		int bytes_read =	recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, (int*)sizeof(&socketAddress));
 
 
 		//
@@ -168,14 +171,12 @@ public:
 		* If the IP addresses match, then we know the packet was from the client
 		* Reset the timeout counter as the message came in correctly
 		*/
-		if (sender == address)
-		{
-			timeoutCounter = 0.0f;
+		timeoutCounter = 0.0f;
 
-			//Copy the received message to the fourth index of the packet
-			memcpy(data, &packet[4], (bytes_read - 4));
-			received_bytes = bytes_read - 4;
-		}
+
+		//Copy the received message to the fourth index of the packet
+		memcpy(data, &packet[4], (bytes_read - 4));
+		received_bytes = bytes_read - 4;
 
 		//
 		unsigned int packet_sequence = 0;
@@ -268,14 +269,15 @@ public:
 	{
 		state = Disconnected;
 		timeoutCounter = 0.0f;
-		address = Address();
 		reliabilitySystem.Reset();
 	};
 
-	int GetHeaderSize() const { return 4 + reliabilitySystem.GetHeaderSize(); }	//DEBUG SET TO CONSTANT CONNECTION_HEADER_SIZE  + RELIABLE_SYSTEM_HEADER_SIZE
-	ReliabilitySystem& GetReliabilitySystem() { return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
-	void OnStop() { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-	void OnDisconnect() { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	int GetHeaderSize() const					{ return BASE_HEADER_SIZE + reliabilitySystem.GetHeaderSize(); }
+	ReliabilitySystem& GetReliabilitySystem()	{ return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
+	void OnStop()								{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	void OnDisconnect()							{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	SOCKET connectedSocket;
+	struct sockaddr_in socketAddressDEBUG;
 
 #pragma endregion
 };
