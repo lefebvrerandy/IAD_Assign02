@@ -537,6 +537,10 @@ void printError(int errorCode)
 			printf("[ERROR]: Socket could not be set to non-blocking with a time out");
 			break;
 
+		case FILE_READ_ERROR:
+			printf("[ERROR]: Unable to read file");
+			break;
+
 		default:
 			printf("[ERROR]: Unidentified error has occurred");
 			break;

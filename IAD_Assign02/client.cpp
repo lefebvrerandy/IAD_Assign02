@@ -21,15 +21,15 @@
 *	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDO
 *  RETURNS       : int : Returns positive if the operation completed without error
 */
-int start_client_protocol(string filePath, int stream_or_datagram, int tcp_or_udp)
+int start_client_protocol(const string filePath, const int stream_or_datagram, const int tcp_or_udp)
 {
 	struct sockaddr_in socketAddress;								//Local address struct
-	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
+	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Zero the socket struct before initialization
 
 
 	//Stage 1: Setup the client's address struct
 	socketAddress.sin_family = AF_INET;											
-	socketAddress.sin_addr.s_addr = inet_addr(storedData[CLA_IP_ADDRESS]);
+	socketAddress.sin_addr.s_addr = inet_addr(storedData[CLA_IP_ADDRESS]);	
 	socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));
 
 
@@ -41,60 +41,58 @@ int start_client_protocol(string filePath, int stream_or_datagram, int tcp_or_ud
 		return  SOCKET_CREATION_ERROR; 
 	}
 
-	if (strcmp(storedData[0], "-TCP") == 0)
+	//Stage 3: Connect to the server
+	int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
+	if (!(boundSocketHandle > SOCKET_ERROR))
 	{
-		//Stage 3: Connect to the server
-		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
-		if (!(boundSocketHandle > SOCKET_ERROR))
-		{
-			printError(SOCKET_CONNECTION_ERROR);
-			return SOCKET_CONNECTION_ERROR;
-		}
+		printError(SOCKET_CONNECTION_ERROR);
+		return SOCKET_CONNECTION_ERROR;
 	}
 
+
 	//Stage 4: Read in the file determined by the CLA
-	char* messageBuffer;
-	FileIO::ReadBinaryFile(filePath);
-	FileIO::ReadAsciiFile(filePath);
+	string binaryFileContents = FileIO::ReadBinaryFile(filePath);
+	string asciiFileContents = FileIO::ReadAsciiFile(filePath);
+	if ((binaryFileContents.empty) || (asciiFileContents.empty))
+	{
+		printError(FILE_READ_ERROR);
+		return FILE_READ_ERROR;
+	}
+
+#pragma region DEBUGtimer
+	//Stage 5: Start the timer
+	//Timer stopwatch;
+	//stopwatch.startTime = GetTickCount();
+	//stopwatch.endTime = GetTickCount();
+	//stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
+#pragma endregion
+
+	try
+	{
+		int len = sizeof(socketAddress);
+		char* messageBuffer;
+		messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
+		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
+		//sendMessage(openSocketHandle, messageBuffer, NETWORK_TYPE_UDP, recipient_addr);	//Send the blocks across the network
 
 
-
-	//Stage 5: Start the message loop
-	Timer stopwatch;
-	#if defined _WIN32
-	stopwatch.startTime = GetTickCount();							//Start the Windows timer
-
-	#elif defined __linux__
-	stopwatch.startTime = stopWatch();								//Start the UNIX timer
-
-	#endif
-	int currentblockCount = 0;
-	int len = sizeof(socketAddress);
-	messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
-	sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
-	//sendMessage(openSocketHandle, messageBuffer, NETWORK_TYPE_UDP, recipient_addr);	//Send the blocks across the network
-	currentblockCount++;
-
-
-	stopwatch.endTime = GetTickCount();								//Stop the Windows timer
-
-	stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
-
-
-	//Stage 6: Receive the missing blocks results from the server
-	struct sockaddr_in sender_addr;
-	len = sizeof(sender_addr);
-	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
-	free(messageBuffer);
-
-
-	//Close the sockets
-	#if defined _WIN32
-		closesocket(openSocketHandle);
-	#elif defined __linux__
-		close(openSocketHandle);
-	#endif
+		//Stage 7: Receive the missing blocks results from the server
+		struct sockaddr_in sender_addr;
+		len = sizeof(sender_addr);
+		memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+		recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
+		free(messageBuffer);
+		throw new exception;
+	}
+	catch (...)
+	{
+		//Close the sockets
+		try
+		{
+			closesocket(openSocketHandle);
+		}
+		catch (...) {}
+	}
 	return SUCCESS;
 }
 
@@ -126,8 +124,8 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 	
-	char* returnArray = malloc(sizeof(char) * (bufferSize + 1));
-	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
+	unsigned char* returnArray = (unsigned char*) malloc(sizeof(char) * (bufferSize + 1));
+	unsigned char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
 
 
 	//Set the message buffer's properties
@@ -137,56 +135,5 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 
 	//Find the amount of space occupied by the message properties, and offset the index
 	int propertyLength = strlen(returnArray);	
-
-
-	//Fill each block with chars 0 - 9
-	fillMessageBuffer(returnArray, bufferSize, propertyLength);					
 	return returnArray;
 }
-
-
-#if defined __linux__
-/*
-*  FUNCTION      : stopWatch
-*  DESCRIPTION   : This function is used to get the number of milliseconds since the Epoch  (Jan 1, 1970)
-*  PARAMETERS    : void: The function takes no arguments
-*  RETURNS       : long : Returns the current microsecond count
-*
-*	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs.
-*		   As a result, credit belongs to the original author on the website. For more information, please see the reference,
-*		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019, from 
-				https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
-*/
-double stopWatch(void)
-{
-	//struct contains the following fields:
-	/*
-		struct timeval {
-			time_t      tv_sec;     //seconds
-			suseconds_t tv_usec;    //microseconds
-		};
-	*/
-
-	struct timeval time;
-	if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
-	{
-		return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
-	}
-	return ERROR_RETURN;
-
-}
-
-
-/*
-*  FUNCTION      : calculateElapsedTime
-*  DESCRIPTION   : This function is used to calculate the elapsed time for message transmission between the networked clients and server
-*  PARAMETERS    : long startTime : Start time for when the transmission began
-*				   long endTime	  : End time for when the transmission had finished
-*  RETURNS       : double : Returns the elapsedTime time between the two values
-*/
-double calculateElapsedTime(long startTime, long endTime)
-{
-	return (endTime - startTime);
-
-}
-#endif

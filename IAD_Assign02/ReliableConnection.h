@@ -1,9 +1,20 @@
-﻿#pragma once
+﻿/*
+*  FILE          : DEBUG
+*  PROJECT       : DEBUG
+*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  DESCRIPTION   : DEBUG
+*/
+
+
+#pragma once
 #include "shared.h"
-//#include "ReliableConnection.h"
+#include "Network.h"
 
 
-
+/*
+* CLASS			: ReliableConnection
+* DESCRIPTION	: DEBUG
+*/
 class ReliableConnection
 {
 

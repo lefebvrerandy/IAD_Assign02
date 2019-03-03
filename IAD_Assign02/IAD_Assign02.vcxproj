@@ -135,7 +135,6 @@
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="Net.h" />
     <ClInclude Include="Network.h" />
-    <ClInclude Include="PacketQueue.h" />
     <ClInclude Include="ReliableConnection.h" />
     <ClInclude Include="SendAndReceive.h" />
     <ClInclude Include="server.h" />

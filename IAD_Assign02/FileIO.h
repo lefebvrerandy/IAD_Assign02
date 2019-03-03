@@ -2,7 +2,6 @@
 *  FILE          : DEBUG
 *  PROJECT       : DEBUG
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
-*  FIRST VERSION : DEBUG
 *  DESCRIPTION   : DEBUG
 */
 

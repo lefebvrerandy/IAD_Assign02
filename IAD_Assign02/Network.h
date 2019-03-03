@@ -1,169 +1,166 @@
+/*
+*  FILE          : DEBUG
+*  PROJECT       : DEBUG
+*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  DESCRIPTION   : DEBUG
+*/
+
+
 #pragma once
 #include "shared.h"
 #include "client.h"
 #include "server.h"
 
-#pragma region AddressClass
 
-inline bool InitializeSockets()
+//inline bool InitializeSockets()
+//{
+//	bool isValid = true;
+//	WSADATA WsaData;
+//	int result = WSAStartup(MAKEWORD(2, 2), &WsaData);
+//	if (result != 0)
+//	{
+//		isValid = false;
+//	}
+//	return isValid;
+//}
+//
+//inline void ShutdownSockets()
+//{
+//	WSACleanup();
+//}
+
+//inline bool open()
+//{
+//	//set non-blocking io
+//	DWORD nonBlocking = 1;
+//	if (ioctlsocket(socket, FIONBIO, &nonBlocking) != 0)
+//	{
+//		printf("failed to set non-blocking socket\n");
+//		Close();
+//		return false;
+//	}
+//
+//	return true;
+//}
+//
+//bool Send(const Address & destination, const void * data, int size)
+//{
+//
+//	if (socket == 0) return false;
+//	sockaddr_in address;
+//	address.sin_family = AF_INET;
+//	address.sin_addr.s_addr = htonl(destination.GetAddress());
+//	address.sin_port = htons((unsigned short)destination.GetPort());
+//
+//	int sent_bytes = sendto(socket, (const char*)data, size, 0, (sockaddr*)&address, sizeof(sockaddr_in));
+//
+//	return sent_bytes == size;
+//}
+//
+//
+//
+//int Receive(void * data, int size)
+//{
+//	#if PLATFORM == PLATFORM_WINDOWS
+//		typedef int socklen_t;
+//	#endif
+//
+//	sockaddr_in from;
+//	socklen_t fromLength = sizeof(from);
+//
+//	int received_bytes = recvfrom(socket, (char*)data, size, 0, (sockaddr*)&from, &fromLength);
+//
+//	if (received_bytes <= 0) return 0;
+//
+//	unsigned int address = ntohl(from.sin_addr.s_addr);
+//	unsigned short port = ntohs(from.sin_port);
+//	return received_bytes;
+//}
+
+
+// packet queue to store information about sent and received packets sorted in sequence order
+//  + we define ordering using the "sequence_more_recent" function, this works provided there is a large gap when sequence wrap occurs
+inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int max_sequence)
 {
-	bool isValid = true;
-	WSADATA WsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &WsaData);
-	if (result != 0)
-	{
-		isValid = false;
-	}
-	return isValid;
+	auto half_max = max_sequence / 2;
+	return (
+		((s1 > s2) && (s1 - s2 <= half_max))
+		||
+		((s2 > s1) && (s2 - s1 > half_max))
+		);
 }
-
-inline void ShutdownSockets()
-{
-	WSACleanup();
-}
-
-#pragma endregion
-
-
-#pragma region SocketClass
-
-
-inline bool open()
-{
-	//set non-blocking io
-	DWORD nonBlocking = 1;
-	if (ioctlsocket(socket, FIONBIO, &nonBlocking) != 0)
-	{
-		printf("failed to set non-blocking socket\n");
-		Close();
-		return false;
-	}
-
-	return true;
-}
-
-bool Send(const Address & destination, const void * data, int size)
-{
-
-	if (socket == 0) return false;
-	sockaddr_in address;
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = htonl(destination.GetAddress());
-	address.sin_port = htons((unsigned short)destination.GetPort());
-
-	int sent_bytes = sendto(socket, (const char*)data, size, 0, (sockaddr*)&address, sizeof(sockaddr_in));
-
-	return sent_bytes == size;
-}
-
-
-
-int Receive(void * data, int size)
-{
-	#if PLATFORM == PLATFORM_WINDOWS
-		typedef int socklen_t;
-	#endif
-
-	sockaddr_in from;
-	socklen_t fromLength = sizeof(from);
-
-	int received_bytes = recvfrom(socket, (char*)data, size, 0, (sockaddr*)&from, &fromLength);
-
-	if (received_bytes <= 0) return 0;
-
-	unsigned int address = ntohl(from.sin_addr.s_addr);
-	unsigned short port = ntohs(from.sin_port);
-	return received_bytes;
-}
-
-#pragma endregion
-
-
-#pragma region PacketDataStruct 
-
-	// packet queue to store information about sent and received packets sorted in sequence order
-	//  + we define ordering using the "sequence_more_recent" function, this works provided there is a large gap when sequence wrap occurs
-		struct PacketData
-		{
-			unsigned int sequence;			// packet sequence number
-			float time;					    // time offset since packet was sent or received (depending on context)
-			int size;						// packet size in bytes
-		};
-
-
-
-		inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int max_sequence)
-		{
-			auto half_max = max_sequence / 2;
-			return (
-				((s1 > s2) && (s1 - s2 <= half_max))
-				||
-				((s2 > s1) && (s2 - s1 > half_max))
-				);
-		}
-
-#pragma endregion
 
 
 #pragma region PacketQueueClass 
 
-		class PacketQueue : public list<PacketData>
-		{
-		public:
 
-			bool exists(unsigned int sequence)
+	/*
+	 * CLASS		: PacketQueue
+	 * DESCRIPTION	: DEBUG
+	 */
+	class PacketQueue : public list<PacketData>
+	{
+	public:
+
+
+		bool exists(unsigned int sequence)
+		{
+			for (iterator itor = begin(); itor != end(); ++itor)
 			{
-				for (iterator itor = begin(); itor != end(); ++itor)
-					if (itor->sequence == sequence)
-						return true;
-				return false;
+				if (itor->sequence == sequence)
+				{
+					return true;
+				}
 			}
 
-			void insert_sorted(const PacketData & p, unsigned int max_sequence)
+			return false;
+		}
+
+		void insert_sorted(const PacketData & p, unsigned int max_sequence)
+		{
+			if (empty())
 			{
-				if (empty())
+				push_back(p);
+			}
+			else
+			{
+				if (!sequence_more_recent(p.sequence, front().sequence, max_sequence))
+				{
+					push_front(p);
+				}
+				else if (sequence_more_recent(p.sequence, back().sequence, max_sequence))
 				{
 					push_back(p);
 				}
 				else
 				{
-					if (!sequence_more_recent(p.sequence, front().sequence, max_sequence))
+					for (PacketQueue::iterator itor = begin(); itor != end(); itor++)
 					{
-						push_front(p);
-					}
-					else if (sequence_more_recent(p.sequence, back().sequence, max_sequence))
-					{
-						push_back(p);
-					}
-					else
-					{
-						for (PacketQueue::iterator itor = begin(); itor != end(); itor++)
+						assert(itor->sequence != p.sequence);
+						if (sequence_more_recent(itor->sequence, p.sequence, max_sequence))
 						{
-							assert(itor->sequence != p.sequence);
-							if (sequence_more_recent(itor->sequence, p.sequence, max_sequence))
-							{
-								insert(itor, p);
-								break;
-							}
+							insert(itor, p);
+							break;
 						}
 					}
 				}
 			}
+		}
 
-			void verify_sorted(unsigned int max_sequence)
+		void verify_sorted(unsigned int max_sequence)
+		{
+			PacketQueue::iterator prev = end();
+			for (PacketQueue::iterator itor = begin(); itor != end(); itor++)
 			{
-				PacketQueue::iterator prev = end();
-				for (PacketQueue::iterator itor = begin(); itor != end(); itor++)
+				assert(itor->sequence <= max_sequence);
+				if (prev != end())
 				{
-					assert(itor->sequence <= max_sequence);
-					if (prev != end())
-					{
-						assert(sequence_more_recent(itor->sequence, prev->sequence, max_sequence));
-						prev = itor;
-					}
+					assert(sequence_more_recent(itor->sequence, prev->sequence, max_sequence));
+					prev = itor;
 				}
 			}
-		};
+		}
+	};
 
 #pragma endregion
 #pragma region ReliabilitySystem
