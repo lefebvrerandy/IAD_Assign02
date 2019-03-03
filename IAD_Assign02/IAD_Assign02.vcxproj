@@ -122,6 +122,7 @@
     <ClCompile Include="Example.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="md5.cpp" />
     <ClCompile Include="PacketQueue.cpp" />
     <ClCompile Include="ReliableConnection.cpp" />
     <ClCompile Include="SendAndReceive.cpp" />

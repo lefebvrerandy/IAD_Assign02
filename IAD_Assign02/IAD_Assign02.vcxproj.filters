@@ -51,6 +51,9 @@
     <ClCompile Include="shared.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileIO.h">
