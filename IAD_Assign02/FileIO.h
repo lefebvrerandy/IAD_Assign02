@@ -29,7 +29,7 @@ public:
 	~FileIO();
 	static string ReadBinaryFile(const string filepath);
 	static string ReadAsciiFile(const string filepath);
-	static string WriteBinaryFile(const string filepath, const string filePath);
-	static string WriteAsciiFile(const string file, const string filePath);
+	static void WriteBinaryFile(const string filepath, const string filePath);
+	static void WriteAsciiFile(const string file, const string filePath);
 };
 #endif // FILEIO_H

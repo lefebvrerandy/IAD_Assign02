@@ -21,6 +21,18 @@
 fstream* FileIO::file = new fstream();
 
 
+
+
+std::vector<uint64_t> GenerateData(std::size_t bytes)
+{
+	assert(bytes % sizeof(uint64_t) == 0);
+	std::vector<uint64_t> data(bytes / sizeof(uint64_t));
+	std::iota(data.begin(), data.end(), 0);
+	std::shuffle(data.begin(), data.end(), std::mt19937{ std::random_device{}() });
+	return data;
+}
+
+
 FileIO::~FileIO()
 {
 	delete file;
@@ -106,7 +118,7 @@ string FileIO::ReadAsciiFile(const string filepath)
 }
 
 //https://stackoverflow.com/questions/11563963/writing-a-binary-file-in-c-very-fast
-string FileIO::WriteBinaryFile(const string contents, const string filePath)
+void FileIO::WriteBinaryFile(const string contents, const string filePath)
 {
 	std::size_t bytes = (std::size_t)contents.c_str();
 	std::vector<uint64_t> data = GenerateData(bytes);
@@ -117,10 +129,9 @@ string FileIO::WriteBinaryFile(const string contents, const string filePath)
 	myfile.close();
 }
 
-string FileIO::WriteAsciiFile(const string contents, const string filePath)
+void FileIO::WriteAsciiFile(const string contents, const string filePath)
 {
 	ofstream OpenedFile(filePath);
-	string fileContents = "";
 	try
 	{
 		OpenedFile << contents;
@@ -131,14 +142,4 @@ string FileIO::WriteAsciiFile(const string contents, const string filePath)
 	}
 
 	OpenedFile.close();
-	return fileContents;
-}
-
-std::vector<uint64_t> GenerateData(std::size_t bytes)
-{
-	assert(bytes % sizeof(uint64_t) == 0);
-	std::vector<uint64_t> data(bytes / sizeof(uint64_t));
-	std::iota(data.begin(), data.end(), 0);
-	std::shuffle(data.begin(), data.end(), std::mt19937{ std::random_device{}() });
-	return data;
 }

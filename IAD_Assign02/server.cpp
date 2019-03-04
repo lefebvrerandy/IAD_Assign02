@@ -181,12 +181,12 @@ int start_server_protocol(int* tcpOrUdp)
 		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 		// Fill recieveBuffer with hashvalue and send
 		recieveBuffer = hashValue;
-		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress), , );
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
 		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 		// Fill recieveBuffer with time and send
 		itoa(totalTime, recieveBuffer,10);	// Store total in recieveBuffer for sending
-		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
 		//All done
 		free(recieveBuffer);

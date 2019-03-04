@@ -75,12 +75,13 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 	//Stage 5: Read in the file in binary or ascii mode
 	string sourceString = ".//source//" + programParameters.fileExtension;
 	string fileContents = NULL;
+	size_t extension = NULL;
 	switch (programParameters.readMode)
 	{
 		case Binary:
 			fileContents = FileIO::ReadBinaryFile(sourceString);
 			
-			size_t extension = programParameters.filepath.find_last_of(".");
+			extension = programParameters.filepath.find_last_of(".");
 			programParameters.fileExtension.substr(extension + 1);
 			if (fileContents.empty())
 			{ 
