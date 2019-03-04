@@ -10,6 +10,7 @@
 
 #include "server.h"
 #include "shared.h"
+#include "FileIO.h"
 #include "ReliableConnection.h"
 
 
@@ -138,9 +139,18 @@ int start_server_protocol(int* tcpOrUdp)
 			programParameters.filepath += recieveBuffer;
 		}
 		timeRequired = clock() - timeRequired;
-		float totalTime = (float)timeRequired / CLOCKS_PER_SEC;
+		//http://forums.devshed.com/programming-42/convert-timeval-double-568348.html
+		float totalTime = ((float)timeRequired / CLOCKS_PER_SEC) - (timeout.tv_sec * 1000000.0 + timeout.tv_usec);
 		// fileInString now contains full file.. Lets print that back into a file and get the hash value
 		//Print to .//destination//
+		if (true/*ASCII*/)
+		{
+			FileIO::WriteAsciiFile(programParameters.filepath, programParameters.fileExtension);
+		}
+		else //Binary
+		{
+			FileIO::WriteBinaryFile(programParameters.filepath, programParameters.fileExtension);
+		}
 
 		// Get hash value of file stored in .//destination//
 		string tempString = ".//destination//" + programParameters.fileExtension;
