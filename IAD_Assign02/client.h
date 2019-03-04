@@ -1,9 +1,8 @@
 /*
 *  FILE          : client.h
-*  PROJECT       : CNTR 2115 - Assignment #1
-*  PROGRAMMER    : Randy Lefebvre & Bence Karner
-*  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains the function prototypes used by the clients to execute their functionality in full
+*  PROJECT       : CNTR 2115 - A02
+*  PROGRAMMER    : Randy Lefebvre 2256 & Bence Karner 5307
+*  DESCRIPTION   : This file contains the function prototypes used by the client.
 */
 
 #pragma once

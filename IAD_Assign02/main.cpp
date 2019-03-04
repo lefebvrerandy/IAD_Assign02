@@ -31,6 +31,9 @@ int main(int argc, char* argv[])
 		case 2:
 			start_client_protocol(SOCK_DGRAM, IPPROTO_UDP);		//UDP client
 			break;
+
+		default:
+			break;
     }
     WSACleanup();
     return 0;
@@ -48,28 +51,52 @@ int main(int argc, char* argv[])
 int proc_arguments(int argumentCount, char* args[])
 {
 
-	if (argumentCount >= 2)
+	try
 	{
-		// Client
-		if (validateAddress((char*)args))
+		if (argumentCount >= 2)
 		{
-			//strcpy(programParameters.port, 30000);
-			//strcpy(programParameters.ipAddress, (char*)args[]);
-			return 2;
+			//Client
+			if (!validateAddress((char*)args))
+			{
+				throw new exception();
+			}
+			if (!validatePort((char*)args[CLA_PORT_NUMBER]))
+			{
+				throw new exception();
+
+			}
+			programParameters.ipAddress = string((char*)args[CLA_IP_ADDRESS]);
+			programParameters.port = convertCharToInt((char*)args[CLA_PORT_NUMBER]);
+			programParameters.filepath = string((char*)args[CLA_FILEPATH]);
+			programParameters.readMode = IdentifyReadMode(args[CLA_FILE_READ_MODE]);
+			return START_CLIENT;
 		}
 		else
 		{
-			//strcpy(port, "3000");
-			return -1;
+			//Server
+			programParameters.port = convertCharToInt((char*)args[CLA_PORT_NUMBER]);
+			return START_SERVER;
 		}
+	}
+	catch (...) { return ERROR_RETURN; }
+}
+
+
+FileReadMode IdentifyReadMode(const char* args)
+{
+	if (strcmp(args, "binary") == 0)
+	{
+		return Binary;
+	}
+	else if (strcmp(args, "ascii") == 0)
+	{
+		return Ascii;
 	}
 	else
 	{
-		// Server
-		return 1;
+		throw new exception();
 	}
 }
-
 
 
 #pragma region FlowControl
