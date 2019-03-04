@@ -1,16 +1,16 @@
 /*
 *  FILE          : shared.c
-*  PROJECT       : CNTR 2115 - Assignment #1
-*  PROGRAMMER    : Randy Lefebvre & Bence Karner
-*  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains a series of functions required by both client and server applications. 
+*  PROJECT       : CNTR 2115 - A02
+*  PROGRAMMER    : Randy Lefebvre 2256 & Bence Karner 5307
+*  DESCRIPTION   : This file contains a series of functions required by both the client and server applications; 
+*				   functions are also included that are used by main() for checking the command line arguments. 
 */
-
 
 
 #include "shared.h"
 #include "client.h"
 #include "server.h"
+
 
 /*
 *  FUNCTION      : createSocket
@@ -51,9 +51,9 @@ int convertCharToInt(char* stringToConvert)
 *  PARAMETERS    : char address[] : String containing the IP address
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validateAddress(char address[])
+bool validateAddress(char address[])
 {
-	int addressValid = -1;
+	bool addressValid = false;
 
 	//Check if the address in the form of IPv4.
 	int errorCount = 0;
@@ -78,8 +78,8 @@ int validateAddress(char address[])
 				}
 			}
 		}
-		if (errorCount > 0) { addressValid = -1; }
-		else { addressValid = 1; }
+		if (errorCount > 0) { addressValid = false; }
+		else { addressValid = true; }
 	}
 	return addressValid;
 }
@@ -89,15 +89,14 @@ int validateAddress(char address[])
 *  PARAMETERS    : char* portString : String captured from the CLA indicating the target port number
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validatePort(char* portString)
+bool validatePort(char* portString)
 {
-	int portValid = 0;
-	portValid = convertCharToInt(portString);			//return of -1 indicates an error has occurred
-	if ((portValid > 0) && (portValid < 65535))
+	int port = convertCharToInt(portString);			//return of -1 indicates an error has occurred
+	if ((port > 0) && (port < 65535))
 	{
-		return portValid;
+		return true;
 	}
-	return ERROR_RETURN;
+	return false;
 }
 
 

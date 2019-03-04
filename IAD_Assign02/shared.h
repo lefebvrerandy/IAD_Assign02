@@ -1,7 +1,7 @@
 /*
 *  FILE          : shared.h
-*  PROJECT       : CNTR 
-*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  PROJECT       : CNTR 2115 - A02
+*  PROGRAMMER    : Randy Lefebvre 2256 & Bence Karner 5307
 *  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application.
 */
 
@@ -46,7 +46,8 @@ using namespace std;
 	#define SWITCH_OPTIONS				5
 	#define SUCCESS						1
 	#define ERROR_RETURN				0
-
+	#define START_CLIENT				1
+	#define START_SERVER				2
 
 	//Network properties
 	#define HOST_BUFFER_SIZE		255
@@ -73,8 +74,8 @@ using namespace std;
 	#define CLA_SOCKET_TYPE			0
 	#define CLA_IP_ADDRESS			1
 	#define CLA_PORT_NUMBER			2
-	#define CLA_BUFFER_SIZE			3
-	#define CLA_NUMBER_OF_BLOCKS	4
+	#define CLA_FILEPATH			3
+	#define CLA_FILE_READ_MODE		4
 
 
 	//Message array index locations
@@ -101,7 +102,6 @@ using namespace std;
 	#define RECV_MSG_ERROR 				0
 
 	
-
 	//Reliable Connection
 	#define PROTOCOL_ID					0x11223344
 	#define DELTA_TIME					1.0f / 30.0f
@@ -190,10 +190,10 @@ using namespace std;
 	SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
 	int convertCharToInt(char* stringToConvert);
 	int proc_arguments(int argumentCount, char* args[]);
-	int validateAddress(char address[]);
+	bool validateAddress(char address[]);
 	void printError(int errorCode);
-	int validateAddress(char address[]);
-	int validatePort(char* portString);
+	bool validatePort(char* portString);
+	FileReadMode IdentifyReadMode(const char* args);
 	char* GetMd5Value(LPCSTR filename);
 
 #pragma endregion

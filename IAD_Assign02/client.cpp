@@ -1,11 +1,10 @@
 /*
 *  FILE          : client.c
-*  PROJECT       : CNTR 2115 - Assignment #1
-*  PROGRAMMER    : Randy Lefebvre & Bence Karner
-*  FIRST VERSION : 2019-01-08
+*  PROJECT       : CNTR 2115 - A02
+*  PROGRAMMER    : Randy Lefebvre 2256 & Bence Karner 5307
 *  DESCRIPTION   : This file contains the functions and logic required to execute the client's required functionality.
 *				   Functions are included for creating, connecting, and closing sockets, and for sending/receiving messages
-*				   to and from the server
+*				   to and from the server.
 */
 
 #include "shared.h"
