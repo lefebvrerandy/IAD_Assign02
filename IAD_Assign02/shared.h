@@ -194,8 +194,6 @@ using namespace std;
 	void printError(int errorCode);
 	bool validatePort(char* portString);
 	FileReadMode IdentifyReadMode(const char* args);
-	int validateAddress(char address[]);
-	int validatePort(char* portString);
 	char* GetMd5Value(LPCSTR filename);
 
 #pragma endregion
