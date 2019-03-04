@@ -8,11 +8,9 @@
 *				   messages from the clients
 */
 
-#if defined _WIN32
 #include "server.h"
-#elif defined __linux__
-#include "../inc/server.h"
-#endif
+#include "shared.h"
+#include "ReliableConnection.h"
 
 
 
@@ -27,7 +25,7 @@ int start_server()
 {
 	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
 
-	//Spawn two threads. One for TCP, one for UDP
+	//Spawn ta thread for UDP
 	HANDLE thread_windows_server[2];
 
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
@@ -79,38 +77,18 @@ int start_server_protocol(int* tcpOrUdp)
 		printError(SOCKET_BIND_ERROR);				
 		return SOCKET_BIND_ERROR;			
 	}
-
-
-	// Only trigger listen if we are using TCP port
-	if (TCPorUDP == IPPROTO_TCP)
-	{
-		//Stage 3: Listen for an incoming connection to the open socket
-		boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
-		if (!(boundSocketHandle > SOCKET_ERROR))
-		{
-			printError(SOCKET_LISTEN_ERROR);
-			return SOCKET_LISTEN_ERROR;		
-		}
-	}
-
+	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
+	reliableConn.SetConnectedSocket(boundSocketHandle);
+	reliableConn.SetSocketAddress(socketAddress);
 	do
 	{
-
+		programParameters.filepath.clear;	// Clear the string value
 		//Stage 4: Accept the incoming client connection
 		struct sockaddr_in remoteAddress;
 		socklen_t addressSize = sizeof(remoteAddress);
 		SOCKET acceptedSocketConnection;
-		if (TCPorUDP == IPPROTO_TCP)
-		{
-			acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
-			if (!(acceptedSocketConnection > ERROR_RETURN))
-			{
-				printError(SOCKET_CONNECTION_ERROR);
-				return SOCKET_CONNECTION_ERROR;
-			}
-		}
 
-		// Only set the timer if we are using TCP port
+
 		fd_set readFDs;
 		FD_ZERO(&readFDs);							//Clear the file descriptor
 		FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
@@ -124,21 +102,24 @@ int start_server_protocol(int* tcpOrUdp)
 		int len = sizeof(sender_addr);
 
 		//Stage 6: Receive the clients reply
-		char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
+		clock_t timeRequired = clock();
 		int recvStatus = 0;
+		char* recieveBuffer = (char*)malloc(sizeof(char) * (PACKET_SIZE));
 		while (recvStatus <= 0)
 		{
-			recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
+			recvStatus = reliableConn.ReceivePacket((unsigned char*)recieveBuffer, sizeof(recieveBuffer), socketAddress);
+			//recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
-		int freeIndex = 0;
-		char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
+
+		//recieveBuffer now contains the filename and extention. Lets store it
+		programParameters.fileExtension = recieveBuffer;
+
+		//char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			memset((void*)resizedBuffer, 0, (sizeof(char)));
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
 			if (!(selectResult > 0))
 			{
@@ -154,16 +135,30 @@ int start_server_protocol(int* tcpOrUdp)
 			{
 					//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 			}
-			strcpy(messageBuffer, resizedBuffer);
-			freeIndex++;
+			programParameters.filepath += recieveBuffer;
 		}
-		free(resizedBuffer);
+		timeRequired = clock() - timeRequired;
+		float totalTime = (float)timeRequired / CLOCKS_PER_SEC;
+		// fileInString now contains full file.. Lets print that back into a file and get the hash value
+		//Print to .//destination//
 
-		//Examine the data, and report the results to the client
-		//char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
-		//packageResults(messageBuffer, messageData.disorganizedBlocksCount);
-		sendto(openSocketHandle, messageBuffer, (int)strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
+		// Get hash value of file stored in .//destination//
+		string tempString = ".//destination//" + programParameters.fileExtension;
+		LPCSTR filename = tempString.c_str();
+		char* hashValue = GetMd5Value(filename);
 
+		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		// Fill recieveBuffer with hashvalue and send
+		recieveBuffer = hashValue;
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+
+		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		// Fill recieveBuffer with time and send
+		itoa(totalTime, recieveBuffer,10);	// Store total in recieveBuffer for sending
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+
+		// All done
+		free(recieveBuffer);
 	} while (true);
 
 
@@ -222,7 +217,7 @@ void printServerProperties(void)
 	char *IPbuffer;
 	struct hostent *host_entry;
 	int hostname;
-	char hostPort[PORT_LENGTH];
+	int hostPort = programParameters.port;
 	//strcpy(hostPort, programParameters.port);
 	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 	host_entry = gethostbyname(hostbuffer);
@@ -232,7 +227,7 @@ void printServerProperties(void)
 	//Print the servers details
 	printf("Hostname: %s\n", hostbuffer);
 	printf("Host IP: %s\n", IPbuffer);
-	printf("Port: %s\n", hostPort);
+	printf("Port: %d\n", hostPort);
 }
 
 
