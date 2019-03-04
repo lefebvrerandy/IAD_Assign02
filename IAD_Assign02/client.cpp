@@ -83,11 +83,8 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 			}
 			break;
 	}
-
-
 	try
 	{
-
 		//Stage 6: Package the message, and send it to the server
 		reliableConn.SendPacket((unsigned char *)fileContents.c_str(), sizeof((unsigned char *)fileContents.c_str()), socketAddress, sizeof(socketAddress));
 
@@ -99,7 +96,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 
 		printf("Transmissison Results: \n");
-		printf("File Size: %i\n", CalculateFileSize());
+		//printf("File Size: %i\n", CalculateFileSize());
 		//printf("Transfer Speed: %i \n", );
 		//printf("Sent file MD5: %s \n", sentFileMD5);
 		//printf("Recieved file MD5: %s \n", recvFileMD5);

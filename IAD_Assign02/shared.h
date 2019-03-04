@@ -1,8 +1,7 @@
 /*
 *  FILE          : shared.h
-*  PROJECT       : CNTR 2115 - Assignment #1
+*  PROJECT       : CNTR 
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
-*  FIRST VERSION : 2019-01-08
 *  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application.
 */
 
@@ -112,6 +111,42 @@ using namespace std;
 
 
 #pragma endregion
+#pragma region Enums
+
+
+	//Defines how the file will be read into the applicaton (binary vs. ascii)
+	enum FileReadMode
+	{
+		Binary,
+		Ascii
+	};
+
+	//Define the Enum used to describe the operating mode of the FlowControl module
+	enum Mode
+	{
+		Good,
+		Bad
+	};
+
+	//Enumerable for setting the connection state of the client/server
+	enum State
+	{
+		Disconnected,
+		Listening,
+		Connecting,
+		ConnectFail,
+		Connected
+	};
+
+
+	//Enumerable for defining the state of the client and server
+	enum OperatingMode
+	{
+		Client,
+		Server
+	};
+
+#pragma endregion
 #pragma region Structs
 
 	//Global struct for all server/client connection info supplied from the CLA
@@ -130,7 +165,6 @@ using namespace std;
 	static ConnectionData programParameters;
 
 
-
 	//Structure defining the attributes of a packet 
 	struct PacketData
 	{
@@ -147,46 +181,6 @@ using namespace std;
 		double endTime;	
 		double elapsedTime;
 	}Timer;
-
-#pragma endregion
-#pragma region Enums
-	
-
-	//Defines how the file will be read into the applicaton (binary vs. ascii)
-	enum FileReadMode
-	{
-		Binary,
-		Ascii
-	};
-
-	//Define the Enum used to describe the operating mode of the FlowControl module
-	enum Mode 
-	{ 
-		Good,
-		Bad 
-	};				
-
-	//Enumerable for setting the connection state of the client/server
-	enum State
-	{
-		Disconnected,
-		Listening,
-		Connecting,
-		ConnectFail,
-		Connected
-	};
-
-
-	//Enumerable for defining the state of the client and server
-	enum OperatingMode
-	{
-		Client, 
-		Server
-	};	
-	OperatingMode operatingMode;
-	char ipAddress[10];
-	char port[10];
-
 
 #pragma endregion
 #pragma region Prototypes
