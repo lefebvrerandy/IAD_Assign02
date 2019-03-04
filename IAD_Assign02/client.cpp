@@ -1,5 +1,5 @@
 /*
-*  FILE          : client.c
+*  FILE          : client.cpp
 *  PROJECT       : CNTR 2115 - A02
 *  PROGRAMMER    : Randy Lefebvre 2256 & Bence Karner 5307
 *  DESCRIPTION   : This file contains the functions and logic required to execute the client's required functionality.
@@ -7,10 +7,12 @@
 *				   to and from the server.
 */
 
+
 #include "shared.h"
 #include "client.h"
 #include "FileIO.h"
 #include "ReliableConnection.h"
+#include "FlowControl.h"
 
 
 /*
@@ -50,12 +52,24 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 		return SOCKET_CONNECTION_ERROR;
 	}
 
-
 	//Stage 4: Setup the reliable connection
 	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
 	reliableConn.SetConnectedSocket(boundSocketHandle);
 	reliableConn.SetSocketAddress  (socketAddress);
 
+
+	float sendAccumulator = 0.0f;
+	float statsAccumulator = 0.0f;
+	FlowControl flowControl;
+
+
+	/*
+	* Delta time is a global defaulted to 1/30
+	* Get the round trip time value from the ReliabilitySystem, and set it to a large number. This defaults the clients connection to be in 
+	*	bad mode before a message is sent
+	*/
+	flowControl.Update(programParameters.DeltaTime, (reliableConn.GetReliabilitySystem().GetRoundTripTime() * 1000.0f));
+	float sendRate = flowControl.GetSendRate();		//Returns 30 if mode = Good, or 10 if mode = Bad
 
 
 	//Stage 5: Read in the file in binary or ascii mode
@@ -64,6 +78,9 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 	{
 		case Binary:
 			fileContents = FileIO::ReadBinaryFile(programParameters.filepath);
+			
+			size_t extension = programParameters.filepath.find_last_of(".");
+			programParameters.fileExtension.substr(extension + 1);
 			if (fileContents.empty())
 			{ 
 				//If the file can't be read, then the tests can't be completed; return with an error
@@ -85,7 +102,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 	try
 	{
 		//Stage 6: Package the message, and send it to the server
-		reliableConn.SendPacket((unsigned char *)fileContents.c_str(), sizeof((unsigned char *)fileContents.c_str()), socketAddress, sizeof(socketAddress));
+		reliableConn.SendPacket((unsigned char *)fileContents.c_str(), sizeof((unsigned char *)fileContents.c_str()), socketAddress, sizeof(socketAddress), programParameters.readMode, programParameters.fileExtension);
 
 
 		//Stage 7: Receive the servers response, and print the results

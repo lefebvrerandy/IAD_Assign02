@@ -50,9 +50,9 @@ public:
 	*  PARAMETERS    : Defined below,
 	*	const unsigned char packetData[] : Contains the message that will be send
 	*	int messageSize : Size of the message in bytes
-	*  RETURNS       : bool : Returns true if the message as sent without error
+	*  RETURNS			: bool : Returns true if the message as sent without error
 	*/
-	bool SendPacket(const unsigned char packetData[], int messageSize, struct sockaddr_in socketAddress, int len)
+	bool SendPacket(const unsigned char packetData[], int messageSize, struct sockaddr_in socketAddress, int len, FileReadMode fileReadMode, const string fileExtension)
 	{
 		//RELIABLE_CONN_HEADER_SIZE is a global set to 12					
 		unsigned char* messageContainer = (unsigned char*)malloc(messageSize + RELIABLE_CONN_HEADER_SIZE);
@@ -68,22 +68,35 @@ public:
 		unsigned int ack_bits = reliabilitySystem.GenerateAckBits();	//Count of the acknowledged bits
 
 
-		//Setup the message header, and copy it's contents to the messageContainer
+		//Setup the message header, and copy the contents of the message to the index position right after the header
 		WriteHeader(messageContainer, seq, ack, ack_bits);
 		memcpy(messageContainer + RELIABLE_CONN_HEADER_SIZE, packetData, messageSize);
 
 
-		//Define the outbound packet, and add four bytes of extra space for the IP address 
-		// data in the first four indexes
-		unsigned char* packet = (unsigned char*)malloc(messageSize + 4);
-		packet[0] = (unsigned char)(protocolId >> 24);
-		packet[1] = (unsigned char)((protocolId >> 16) & 0xFF);
-		packet[2] = (unsigned char)((protocolId >> 8) & 0xFF);
-		packet[3] = (unsigned char)((protocolId) & 0xFF);
+		//Define the outbound packet, and add 5 bytes of extra space for the IP address 
+		// data in the first 5 indexes
+		unsigned char* packet = (unsigned char*)malloc(messageSize + PACKET_HEADER_SIZE);
+		if (fileReadMode == Ascii)
+		{
+			packet[0] = (unsigned char)('A');
+		}
+		else
+		{
+			packet[0] = (unsigned char)('B');
+		}
+
+
+		/*
+		* Copy in the file extension into the message header
+		* The file extension will always be a max of three chars, and will ocupy index's one to three. 
+		*	For example : 
+		*	-> exe, txt, dat, bin etc. 
+		*/
+		packet[1] = (unsigned char)(fileExtension.c_str());
 
 
 		//Copy the message contents to the outbound packet, and wave that bitch goodbye
-		memcpy(&packet[4], messageContainer, messageSize);
+		memcpy(&packet[4], messageContainer, (int)sizeof(messageContainer));
 		bool sendComplete = sendto(connectedSocket, (const char*)packet, messageSize + 4, 0, (const struct sockaddr*)&socketAddress, len);
 		if (!(sendComplete == true))
 		{
@@ -91,7 +104,7 @@ public:
 		}
 
 
-		//
+		//DEBUG
 		reliabilitySystem.PacketSent(messageSize);
 		free(packet);
 		free(messageContainer);

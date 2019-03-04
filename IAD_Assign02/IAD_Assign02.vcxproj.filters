@@ -30,9 +30,6 @@
     <ClCompile Include="Example.cpp">
       <Filter>SourceCopy</Filter>
     </ClCompile>
-    <ClCompile Include="SendAndReceive.cpp">
-      <Filter>SourceCopy</Filter>
-    </ClCompile>
     <ClCompile Include="client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -47,6 +44,9 @@
     </ClCompile>
     <ClCompile Include="md5.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FlowControl.h">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -69,9 +69,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Net.h">
-      <Filter>SourceCopy</Filter>
-    </ClInclude>
-    <ClInclude Include="SendAndReceive.h">
       <Filter>SourceCopy</Filter>
     </ClInclude>
   </ItemGroup>

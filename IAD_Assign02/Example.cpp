@@ -81,12 +81,12 @@
 //				mode = Bad;
 //
 //
-//				//good_conditions_time is field of this class 
+//				//good_conditions_time is a field of this class 
 //				if (good_conditions_time < 10.0f && penalty_time < 60.0f )
 //				{
 //					penalty_time *= 2.0f;
-//					if ( penalty_time > 60.0f )
-//						penalty_time = 60.0f;
+//					if ( penalty_time > 60.0f ) penalty_time = 60.0f;
+
 //					printf( "penalty time increased to %.1f\n", penalty_time );
 //				}
 //				good_conditions_time = 0.0f;
@@ -100,8 +100,8 @@
 //			if ( penalty_reduction_accumulator > 10.0f && penalty_time > 1.0f )
 //			{
 //				penalty_time /= 2.0f;
-//				if ( penalty_time < 1.0f )
-//					penalty_time = 1.0f;
+//				if ( penalty_time < 1.0f ) penalty_time = 1.0f;
+
 //				printf( "penalty time reduced to %.1f\n", penalty_time );
 //				penalty_reduction_accumulator = 0.0f;
 //			}
@@ -121,8 +121,6 @@
 //				good_conditions_time = 0.0f;			//Reset the good connection time as our connection is now rated as bad
 //			}
 //
-//
-//			//
 //			if ( good_conditions_time > penalty_time )
 //			{
 //				printf( "*** upgrading to good mode ***\n" );
@@ -179,16 +177,6 @@
 //	enum Mode{ Client, Server};			//Local enumerable for defining the state of the client and server
 //	Mode operatingMode = Server;		//Default to server operating mode, unless specified by the CLA
 //	Address address;					//We will use this for holding an address, and for controlling the sockets
-//
-//
-//	//I read online that a string data type is suitable for storing the contents of a binary file. Just don't expect
-//	//	it to behave like a C-style string, and we're good
-//	FileIO fileReader;
-//	string fileContents = FileIO::ReadAsciiFile("Test.txt");
-//	fileContents = FileIO::ReadBinaryFile("Test.dat");
-//	fileContents = FileIO::ReadBinaryFile("Test.exe");
-//
-//
 //
 //	/*
 //	 *	If there's two or more Command Line Arguments (CLA), check if they supplied all the variables required by 
@@ -258,8 +246,6 @@
 //	while ( true )
 //	{
 //
-//		
-//		//This is a setter; IsConnected will always set the enum State = Connected (value of 4)
 //		if (connection.IsConnected())
 //		{
 //			

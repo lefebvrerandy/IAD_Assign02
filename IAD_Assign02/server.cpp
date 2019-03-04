@@ -82,7 +82,7 @@ int start_server_protocol(int* tcpOrUdp)
 	reliableConn.SetSocketAddress(socketAddress);
 	do
 	{
-		programParameters.filepath.clear;	// Clear the string value
+		programParameters.filepath.clear();	// Clear the string value
 		//Stage 4: Accept the incoming client connection
 		struct sockaddr_in remoteAddress;
 		socklen_t addressSize = sizeof(remoteAddress);

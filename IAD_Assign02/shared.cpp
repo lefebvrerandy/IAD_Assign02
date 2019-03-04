@@ -25,9 +25,7 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 {
 	SOCKET newSocket = socket(addressFamily, socketType, protocolType);
 	return newSocket;
-
 }
-
 
 /*
 *  FUNCTION      : convertCharToInt
@@ -42,14 +40,12 @@ int convertCharToInt(char* stringToConvert)
 	return returnNumber;
 }
 
-
-
 /*
 *  FUNCTION      : validateAddress
 *  DESCRIPTION   : This function is used to check if the IP address supplied from the command line, is valid according to the
 *					standards set by IPv4 (ie. its a 32-bit number of form DDD.DDD.DDD.DDD)
 *  PARAMETERS    : char address[] : String containing the IP address
-*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
+*  RETURNS       : bool : Denotes if the operation completed successfully
 */
 bool validateAddress(char address[])
 {
@@ -87,7 +83,7 @@ bool validateAddress(char address[])
 /*  FUNCTION      : validatePort
 *  DESCRIPTION   : This function is used to check if the port CLA is valid
 *  PARAMETERS    : char* portString : String captured from the CLA indicating the target port number
-*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
+*  RETURNS       : bool : Denotes if the operation completed successfully
 */
 bool validatePort(char* portString)
 {
@@ -98,7 +94,6 @@ bool validatePort(char* portString)
 	}
 	return false;
 }
-
 
 /*
 *  FUNCTION      : printError

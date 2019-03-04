@@ -48,6 +48,9 @@ using namespace std;
 	#define ERROR_RETURN				0
 	#define START_CLIENT				1
 	#define START_SERVER				2
+	#define ROUND_TRIP_THRESHOLD		255
+	#define PACKET_HEADER_SIZE			4
+
 
 	//Network properties
 	#define HOST_BUFFER_SIZE		255

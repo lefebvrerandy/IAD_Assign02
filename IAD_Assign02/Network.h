@@ -206,8 +206,7 @@ inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int 
 				data.time = 0.0f;
 				data.size = size;
 				receivedQueue.push_back(data);
-				if (sequence_more_recent(sequence, remote_sequence, max_sequence))
-					remote_sequence = sequence;
+				if (sequence_more_recent(sequence, remote_sequence, max_sequence)) { remote_sequence = sequence; }
 			}
 
 			unsigned int GenerateAckBits()

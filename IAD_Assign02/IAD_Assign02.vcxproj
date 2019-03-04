@@ -121,9 +121,9 @@
     <ClCompile Include="client.cpp" />
     <ClCompile Include="Example.cpp" />
     <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="FlowControl.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="md5.cpp" />
-    <ClCompile Include="SendAndReceive.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="shared.cpp" />
     <ClCompile Include="TestHarness.cpp" />
@@ -135,7 +135,6 @@
     <ClInclude Include="Net.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ReliableConnection.h" />
-    <ClInclude Include="SendAndReceive.h" />
     <ClInclude Include="server.h" />
     <ClInclude Include="shared.h" />
   </ItemGroup>
