@@ -237,63 +237,6 @@ void printServerProperties(void)
 
 
 /*
-*  FUNCTION      : printError
-*  DESCRIPTION   : This function is used to print an error to the console window
-*  PARAMETERS    : int errorCode : Int representing the error to print
-*  RETURNS       : void : Function has no return
-*/
-void printError(int errorCode)
-{
-	switch (errorCode)
-	{
-		case SOCKET_CREATION_ERROR:
-			printf("[ERROR]: Could not create socket");
-			break;
-
-		case SOCKET_BIND_ERROR:
-			printf("[ERROR]: Could not bind to socket");
-			break;
-
-		case SOCKET_LISTEN_ERROR:
-			printf("[ERROR]: Could not listen to the socket");
-			break;
-
-		case SOCKET_CONNECTION_ERROR:
-			printf("[ERROR]: Could not accept new connection");
-			break;
-
-		case SOCKET_SEND_ERROR:
-			printf("[ERROR]: Could not send message");
-			break;
-
-		case SOCKET_RECEIVE_ERROR:
-			printf("[ERROR]: Could not receive message");
-			break;
-
-		case SOCKET_HOST_ERROR:
-			printf("[ERROR]: Could get host by address");
-			break;
-
-		case SOCKET_TIMEOUT:
-			printf("[ERROR]: Socket connection timed out");
-			break;
-
-		case SOCKET_SETTINGS_ERROR:
-			printf("[ERROR]: Socket could not be set to non-blocking with a time out");
-			break;
-
-		case FILE_READ_ERROR:
-			printf("[ERROR]: Unable to read file");
-			break;
-
-		default:
-			printf("[ERROR]: Unidentified error has occurred");
-			break;
-	}
-}
-
-
-/*
 *  FUNCTION      : packageResults
 *  DESCRIPTION   : This method is used to print an integer into a suitable array
 *  PARAMETERS    : Function parameters are as follows,
@@ -305,3 +248,11 @@ void packageResults(char messagBuffer[], int packagedValue)
 {
 	sprintf(messagBuffer, "%d", packagedValue);
 }
+
+
+
+//Stage 5: Start the timer
+//Timer stopwatch;
+//stopwatch.startTime = GetTickCount();
+//stopwatch.endTime = GetTickCount();
+//stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;

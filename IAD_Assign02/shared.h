@@ -114,13 +114,13 @@ using namespace std;
 #pragma endregion
 #pragma region Structs
 
-
 	//Global struct for all server/client connection info supplied from the CLA
 	typedef struct
 	{
 		string ipAddress;
 		int port;
 		string filepath;
+		FileReadMode readMode;
 		const int ProtocolId = PROTOCOL_ID;
 		const float DeltaTime = DELTA_TIME;
 		const float SendRate = SEND_RATE;
@@ -151,6 +151,14 @@ using namespace std;
 #pragma endregion
 #pragma region Enums
 	
+
+	//Defines how the file will be read into the applicaton (binary vs. ascii)
+	enum FileReadMode
+	{
+		Binary,
+		Ascii
+	};
+
 	//Define the Enum used to describe the operating mode of the FlowControl module
 	enum Mode 
 	{ 
@@ -185,7 +193,6 @@ using namespace std;
 
 
 	SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-	void sendMessage(SOCKET connectedSocket, char messageBuffer[], const struct sockaddr_in socketAddress);
 	int convertCharToInt(char* stringToConvert);
 	int proc_arguments(int argumentCount, char* args[]);
 	int validateAddress(char address[]);
