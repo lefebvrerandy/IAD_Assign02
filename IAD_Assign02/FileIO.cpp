@@ -8,6 +8,16 @@
 
 
 #include "FileIO.h"
+#include <fstream>
+#include <chrono>
+#include <vector>
+#include <cstdint>
+#include <numeric>
+#include <random>
+#include <algorithm>
+#include <iostream>
+#include <cassert>
+
 fstream* FileIO::file = new fstream();
 
 
@@ -95,3 +105,40 @@ string FileIO::ReadAsciiFile(const string filepath)
 	return fileContents;
 }
 
+//https://stackoverflow.com/questions/11563963/writing-a-binary-file-in-c-very-fast
+string FileIO::WriteBinaryFile(const string contents, const string filePath)
+{
+	std::size_t bytes = (std::size_t)contents.c_str();
+	std::vector<uint64_t> data = GenerateData(bytes);
+
+	std::ios_base::sync_with_stdio(false);
+	auto myfile = std::fstream(filePath, std::ios::out | std::ios::binary);
+	myfile.write((char*)&data[0], bytes);
+	myfile.close();
+}
+
+string FileIO::WriteAsciiFile(const string contents, const string filePath)
+{
+	ofstream OpenedFile(filePath);
+	string fileContents = "";
+	try
+	{
+		OpenedFile << contents;
+	}
+	catch (...)
+	{
+		cout << "Error: Could not read file: " << filePath << endl;
+	}
+
+	OpenedFile.close();
+	return fileContents;
+}
+
+std::vector<uint64_t> GenerateData(std::size_t bytes)
+{
+	assert(bytes % sizeof(uint64_t) == 0);
+	std::vector<uint64_t> data(bytes / sizeof(uint64_t));
+	std::iota(data.begin(), data.end(), 0);
+	std::shuffle(data.begin(), data.end(), std::mt19937{ std::random_device{}() });
+	return data;
+}
