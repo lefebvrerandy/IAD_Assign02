@@ -59,13 +59,13 @@ int proc_arguments(int argumentCount, char* args[])
 		}
 		else
 		{
-			strcpy(port, "3000");
 			return -1;
 		}
 	}
 	else
 	{
 		// Server
+		strcpy(port, "3000");
 		operatingMode = Server;
 		return 1;
 	}

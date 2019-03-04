@@ -8,7 +8,6 @@
 *				   to and from the server
 */
 
-#pragma once
 #include "shared.h"
 #include "client.h"
 #include "FileIO.h"
@@ -20,7 +19,7 @@
 *  DESCRIPTION   : This function is used to create the client instance of the application.
 *  PARAMETERS    : Parameters are as follows,
 *	int stream_or_datagram : Denotes if the socket is of type SOCK_STREAM or SOCK_DGRAM
-*	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDO
+*	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDP
 *  RETURNS       : int : Returns positive if the operation completed without error
 */
 int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)

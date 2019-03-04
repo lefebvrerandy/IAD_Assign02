@@ -8,11 +8,7 @@
 *				   messages from the clients
 */
 
-#if defined _WIN32
 #include "server.h"
-#elif defined __linux__
-#include "../inc/server.h"
-#endif
 
 
 
@@ -27,7 +23,7 @@ int start_server()
 {
 	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
 
-	//Spawn two threads. One for TCP, one for UDP
+	//Spawn ta thread for UDP
 	HANDLE thread_windows_server[2];
 
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
@@ -80,19 +76,6 @@ int start_server_protocol(int* tcpOrUdp)
 		return SOCKET_BIND_ERROR;			
 	}
 
-
-	// Only trigger listen if we are using TCP port
-	if (TCPorUDP == IPPROTO_TCP)
-	{
-		//Stage 3: Listen for an incoming connection to the open socket
-		boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
-		if (!(boundSocketHandle > SOCKET_ERROR))
-		{
-			printError(SOCKET_LISTEN_ERROR);
-			return SOCKET_LISTEN_ERROR;		
-		}
-	}
-
 	do
 	{
 
@@ -100,17 +83,8 @@ int start_server_protocol(int* tcpOrUdp)
 		struct sockaddr_in remoteAddress;
 		socklen_t addressSize = sizeof(remoteAddress);
 		SOCKET acceptedSocketConnection;
-		if (TCPorUDP == IPPROTO_TCP)
-		{
-			acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
-			if (!(acceptedSocketConnection > ERROR_RETURN))
-			{
-				printError(SOCKET_CONNECTION_ERROR);
-				return SOCKET_CONNECTION_ERROR;
-			}
-		}
 
-		// Only set the timer if we are using TCP port
+
 		fd_set readFDs;
 		FD_ZERO(&readFDs);							//Clear the file descriptor
 		FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
