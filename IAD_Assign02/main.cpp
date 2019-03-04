@@ -53,19 +53,20 @@ int proc_arguments(int argumentCount, char* args[])
 		// Client
 		if (validateAddress((char*)args))
 		{
-			//strcpy(programParameters.port, 30000);
-			//strcpy(programParameters.ipAddress, (char*)args[]);
+			//programParameters.port = 3001;
+			string newString((char*)args);
+			programParameters.ipAddress = newString;
 			return 2;
 		}
 		else
 		{
-			//strcpy(port, "3000");
 			return -1;
 		}
 	}
 	else
 	{
 		// Server
+		//programParameters.port = 3000;
 		return 1;
 	}
 }

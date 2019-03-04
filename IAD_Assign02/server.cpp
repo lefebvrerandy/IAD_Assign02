@@ -9,6 +9,8 @@
 */
 
 #include "server.h"
+#include "shared.h"
+#include "ReliableConnection.h"
 
 
 
@@ -75,10 +77,12 @@ int start_server_protocol(int* tcpOrUdp)
 		printError(SOCKET_BIND_ERROR);				
 		return SOCKET_BIND_ERROR;			
 	}
-
+	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
+	reliableConn.SetConnectedSocket(boundSocketHandle);
+	reliableConn.SetSocketAddress(socketAddress);
 	do
 	{
-
+		programParameters.filepath.clear;	// Clear the string value
 		//Stage 4: Accept the incoming client connection
 		struct sockaddr_in remoteAddress;
 		socklen_t addressSize = sizeof(remoteAddress);
@@ -98,21 +102,24 @@ int start_server_protocol(int* tcpOrUdp)
 		int len = sizeof(sender_addr);
 
 		//Stage 6: Receive the clients reply
-		char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
+		clock_t timeRequired = clock();
 		int recvStatus = 0;
+		char* recieveBuffer = (char*)malloc(sizeof(char) * (PACKET_SIZE));
 		while (recvStatus <= 0)
 		{
-			recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
+			recvStatus = reliableConn.ReceivePacket((unsigned char*)recieveBuffer, sizeof(recieveBuffer), socketAddress);
+			//recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
-		int freeIndex = 0;
-		char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
+
+		//recieveBuffer now contains the filename and extention. Lets store it
+		programParameters.fileExtension = recieveBuffer;
+
+		//char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			memset((void*)resizedBuffer, 0, (sizeof(char)));
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
 			if (!(selectResult > 0))
 			{
@@ -128,16 +135,30 @@ int start_server_protocol(int* tcpOrUdp)
 			{
 					//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 			}
-			strcpy(messageBuffer, resizedBuffer);
-			freeIndex++;
+			programParameters.filepath += recieveBuffer;
 		}
-		free(resizedBuffer);
+		timeRequired = clock() - timeRequired;
+		float totalTime = (float)timeRequired / CLOCKS_PER_SEC;
+		// fileInString now contains full file.. Lets print that back into a file and get the hash value
+		//Print to .//destination//
 
-		//Examine the data, and report the results to the client
-		//char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
-		//packageResults(messageBuffer, messageData.disorganizedBlocksCount);
-		sendto(openSocketHandle, messageBuffer, (int)strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
+		// Get hash value of file stored in .//destination//
+		string tempString = ".//destination//" + programParameters.fileExtension;
+		LPCSTR filename = tempString.c_str();
+		char* hashValue = GetMd5Value(filename);
 
+		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		// Fill recieveBuffer with hashvalue and send
+		recieveBuffer = hashValue;
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+
+		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		// Fill recieveBuffer with time and send
+		itoa(totalTime, recieveBuffer,10);	// Store total in recieveBuffer for sending
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+
+		// All done
+		free(recieveBuffer);
 	} while (true);
 
 
@@ -196,7 +217,7 @@ void printServerProperties(void)
 	char *IPbuffer;
 	struct hostent *host_entry;
 	int hostname;
-	char hostPort[PORT_LENGTH];
+	int hostPort = programParameters.port;
 	//strcpy(hostPort, programParameters.port);
 	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 	host_entry = gethostbyname(hostbuffer);
@@ -206,7 +227,7 @@ void printServerProperties(void)
 	//Print the servers details
 	printf("Hostname: %s\n", hostbuffer);
 	printf("Host IP: %s\n", IPbuffer);
-	printf("Port: %s\n", hostPort);
+	printf("Port: %d\n", hostPort);
 }
 
 

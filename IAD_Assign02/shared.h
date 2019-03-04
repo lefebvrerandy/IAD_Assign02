@@ -153,8 +153,9 @@ using namespace std;
 	typedef struct
 	{
 		string ipAddress;
-		int port;
+		int port = 3000;
 		string filepath;
+		string fileExtension;
 		FileReadMode readMode;
 		const int ProtocolId = PROTOCOL_ID;
 		const float DeltaTime = DELTA_TIME;
@@ -193,5 +194,6 @@ using namespace std;
 	void printError(int errorCode);
 	int validateAddress(char address[]);
 	int validatePort(char* portString);
+	char* GetMd5Value(LPCSTR filename);
 
 #pragma endregion
