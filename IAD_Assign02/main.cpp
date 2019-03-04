@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 {
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(1,1), &wsa_data);
+	OperatingMode operatingMode;
 
     // process the command line arguments
 	// If 1 argument, must be start server. 
@@ -50,23 +51,21 @@ int proc_arguments(int argumentCount, char* args[])
 	if (argumentCount >= 2)
 	{
 		// Client
-		operatingMode = Client;
 		if (validateAddress((char*)args))
 		{
-			strcpy(port, "3001");
-			strcpy(ipAddress, (char*)args);
+			//strcpy(programParameters.port, 30000);
+			//strcpy(programParameters.ipAddress, (char*)args[]);
 			return 2;
 		}
 		else
 		{
-			strcpy(port, "3000");
+			//strcpy(port, "3000");
 			return -1;
 		}
 	}
 	else
 	{
 		// Server
-		operatingMode = Server;
 		return 1;
 	}
 }

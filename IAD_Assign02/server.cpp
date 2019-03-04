@@ -205,7 +205,7 @@ struct sockaddr_in intitializeSocket(void)
 	memset((void*)&socketDetials, 0, sizeof(socketDetials));				//Clear the address struct for initialization
 	socketDetials.sin_family = AF_INET;										//Address family internet protocol
 	socketDetials.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
-	socketDetials.sin_port = htons((u_short)storedData[CLA_PORT_NUMBER]);
+	socketDetials.sin_port = htons((u_short)programParameters.port);
 	return socketDetials;
 }
 
@@ -223,7 +223,7 @@ void printServerProperties(void)
 	struct hostent *host_entry;
 	int hostname;
 	char hostPort[PORT_LENGTH];
-	strcpy(hostPort, port);
+	//strcpy(hostPort, programParameters.port);
 	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 	host_entry = gethostbyname(hostbuffer);
 	IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
