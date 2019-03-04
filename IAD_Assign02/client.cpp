@@ -60,39 +60,50 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 
 
-	//Stage 5: Read in the file set by the CLA
-	bool binaryFileReadError  = false; 
-	string binaryFileContents = FileIO::ReadBinaryFile(storedData[3]);
-	if (binaryFileContents.empty())
+	//Stage 5: Read in the file in binary or ascii mode
+	string fileContents = NULL;
+	switch (programParameters.readMode)
 	{
-		binaryFileReadError = true;
-		binaryFileContents = "Error: Binary file read error";
-	}
+		case Binary:
+			fileContents = FileIO::ReadBinaryFile(programParameters.filepath);
+			if (fileContents.empty())
+			{ 
+				//If the file can't be read, then the tests can't be completed; return with an error
+				printError(FILE_READ_ERROR);
+				return FILE_READ_ERROR;
+			}
+			break;
 
-	bool asciiFileReadError = false;
-	string asciiFileContents = FileIO::ReadAsciiFile(storedData[3]);
-	if (asciiFileContents.empty())
-	{
-		asciiFileReadError = true;
-		asciiFileContents = "Error: Ascii file read error";
-	}
-	if ((binaryFileReadError) && (asciiFileReadError))
-	{
-		printError(FILE_READ_ERROR);
-		return FILE_READ_ERROR;
+		case Ascii:
+			fileContents = FileIO::ReadAsciiFile(programParameters.filepath);
+			if (fileContents.empty())
+			{
+				//If the file can't be read, then the tests can't be completed; return with an error
+				printError(FILE_READ_ERROR);
+				return FILE_READ_ERROR;
+			}
+			break;
 	}
 
 
 	try
 	{
-		//Stage 6: Package the message
-		reliableConn.SendPacket((unsigned char *)asciiFileContents.c_str(), sizeof((unsigned char *)asciiFileContents.c_str()), socketAddress, sizeof(socketAddress));
+
+		//Stage 6: Package the message, and send it to the server
+		reliableConn.SendPacket((unsigned char *)fileContents.c_str(), sizeof((unsigned char *)fileContents.c_str()), socketAddress, sizeof(socketAddress));
 
 
-		//Stage 7: DEBUG
+		//Stage 7: Receive the servers response, and print the results
 		unsigned char* recieveBuffer = (unsigned char*)malloc(sizeof(char) * (PACKET_SIZE));
 		reliableConn.ReceivePacket(recieveBuffer, sizeof(recieveBuffer), socketAddress);
 		free(recieveBuffer);
+
+
+		printf("Transmissison Results: \n");
+		printf("File Size: %i\n", CalculateFileSize());
+		//printf("Transfer Speed: %i \n", );
+		//printf("Sent file MD5: %s \n", sentFileMD5);
+		//printf("Recieved file MD5: %s \n", recvFileMD5);
 		throw new exception;
 	}
 	catch (...)
@@ -123,12 +134,21 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 }
 
 
-#pragma region DEBUGtimer
-//Stage 5: Start the timer
-//Timer stopwatch;
-//stopwatch.startTime = GetTickCount();
-//stopwatch.endTime = GetTickCount();
-//stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
-#pragma endregion
 
-//sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
+
+/*
+*  FUNCTION      : DEBUG
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : Parameters are as follows,
+*  RETURNS       : DEBUG
+*/
+int CalculateFileSize(const unsigned char* file)
+{
+	int fileSize = 0;
+
+
+
+	return fileSize;
+}
+
+//sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);		//DEBUG REMOVE BEFORE SUBMISSION
