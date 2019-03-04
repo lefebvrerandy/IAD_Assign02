@@ -8,8 +8,8 @@
 
 #pragma once
 #include "shared.h"
-#include "client.h"
 #include "server.h"
+
 
 // packet queue to store information about sent and received packets sorted in sequence order
 //  + we define ordering using the "sequence_more_recent" function, this works provided there is a large gap when sequence wrap occurs
@@ -369,10 +369,10 @@ inline bool sequence_more_recent(unsigned int s1, unsigned int s2, unsigned int 
 						acked_bytes_per_second += itor->size;
 					}
 				}
-				sent_bytes_per_second /= rtt_maximum;
-				acked_bytes_per_second /= rtt_maximum;
+				sent_bytes_per_second /= (int)rtt_maximum;
+				acked_bytes_per_second /= (int)rtt_maximum;
 				sent_bandwidth = sent_bytes_per_second * (8 / 1000.0f);
-				acked_bandwidth = acked_bytes_per_second * (8 / 1000.0f);
+				acked_bandwidth = (float)acked_bytes_per_second * (8 / 1000.0f);
 			}
 
 		private:

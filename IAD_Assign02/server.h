@@ -17,15 +17,6 @@
 int start_server();
 int start_server_protocol(int* tcpOrUdp);
 void printServerProperties(void);
-long getBlockSize(char messageCopy[]);
-int convertHexToDecimal(char* messageProperties);
-int getNumberOfBlocks(char messageCopy[]);
-int getBlockID(char messageCopy[]);
-void saveBlockID(int blockIDList[], const int blockID, const int occupiedIndex);
-int checkForMissedBlocks(int receivedBlockList[], int blocksReceivedCount);
 void packageResults(char messagBuffer[], int packagedValue);
 struct sockaddr_in intitializeSocket(void);
-int getBlockCount(int blockIDList[]);
 void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, const int disorganizedBlockCount);
-int checkForDisorganizedBlocks(int blockIDList[], int blocksReceivedCount);
-int cmpfunc(const void * a, const void * b);

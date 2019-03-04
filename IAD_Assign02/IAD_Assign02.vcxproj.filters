@@ -21,9 +21,6 @@
     <ClCompile Include="FileIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ReliableConnection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TestMethods.cpp">
       <Filter>SourceCopy</Filter>
     </ClCompile>

@@ -9,10 +9,10 @@
 *				   the creating networked processes between windows and UNIX systems.
 */
 
+#pragma once
 #include "shared.h"
-#include "server.h"		//Needed for start_Server() prototype
-#include "client.h"		//Needed for clientProtocol() prototype
-
+#include "server.h"
+#include "client.h"
 
 int main(int argc, char* argv[])
 {
@@ -24,16 +24,14 @@ int main(int argc, char* argv[])
 	// If 5 arguments, must be start client.
     switch(proc_arguments(argc, argv))
     {
-    case 1:
-        start_server();
-        break;
-    case 2:
-		string filePath = ".//Test.txt";
-		start_client_protocol(filePath, SOCK_DGRAM, IPPROTO_UDP);		//UDP client
-        break;
+		case 1:
+			start_server();
+			break;
+		case 2:
+			start_client_protocol(SOCK_DGRAM, IPPROTO_UDP);		//UDP client
+			break;
     }
     WSACleanup();
-
     return 0;
 }
 
@@ -175,7 +173,7 @@ int validateAddress(char address[])
 
 	//Check if the address in the form of IPv4.
 	int errorCount = 0;
-	int IPaddressLength = strlen(address);
+	int IPaddressLength = (int)strlen(address);
 	if (IPaddressLength == 32)												//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
 	{
 		int index = 0;

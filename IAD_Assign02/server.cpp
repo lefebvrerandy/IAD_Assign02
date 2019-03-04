@@ -82,24 +82,9 @@ int start_server()
 int start_server_protocol(int* tcpOrUdp)
 {
 	
-	struct timeval timeout = {				//Tracks socket timeout
-		.tv_sec = 5,						//5 second timeout
-		.tv_usec = 0
-	};
-
-	NetworkResults messageData = {			//Tracks the networks status based on the 
-		.blocksReceivedCount = 0,
-		.missingBlockCount = 0,
-		.disorganizedBlocksCount = 0,
-		.blocksReceivedList = {0}
-	};
-
-	MessageProperties protocol = {			//Tracks message properties
-		.blockSize = 0,
-		.blockCount = 0
-	};
-
+	struct timeval timeout = { 5, 0 };
 	int TCPorUDP = tcpOrUdp[1];
+
 
 	//Stage 1: Create local socket
 	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
@@ -113,7 +98,7 @@ int start_server_protocol(int* tcpOrUdp)
 	//Stage 2: Initialize the socket struct, and bind to the open socket
 	struct sockaddr_in socketAddress = intitializeSocket();
 	struct sockaddr_in sender_addr;
-	int boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
+	auto boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
 	if (!(boundSocketHandle > SOCKET_ERROR))
 	{
 		printError(SOCKET_BIND_ERROR);				
@@ -170,28 +155,21 @@ int start_server_protocol(int* tcpOrUdp)
 		{
 			recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
-
-
-		//Deconstruct the message and get its properties
-		protocol.blockSize = getBlockSize(messageBuffer);
-		protocol.blockCount = getNumberOfBlocks(messageBuffer);
 		int freeIndex = 0;
-		char* resizedBuffer = (char*)malloc(sizeof(char) * protocol.blockSize);
+		char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
-			saveBlockID(messageData.blocksReceivedList, getBlockID(messageBuffer), freeIndex);
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			memset((void*)resizedBuffer, 0, ((sizeof(char)) * protocol.blockSize));
-
+			memset((void*)resizedBuffer, 0, (sizeof(char)));
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
+			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
 			if (!(selectResult > 0))
 			{
 
 				//Make one final recv() call to ensure the socket is indeed empty
-				recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
+				//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 				if (!(recvStatus > 0))
 				{
 					break;
@@ -199,7 +177,7 @@ int start_server_protocol(int* tcpOrUdp)
 			}
 			else
 			{
-					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
+					//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 			}
 			strcpy(messageBuffer, resizedBuffer);
 			freeIndex++;
@@ -207,17 +185,9 @@ int start_server_protocol(int* tcpOrUdp)
 		free(resizedBuffer);
 
 		//Examine the data, and report the results to the client
-		messageData.blocksReceivedCount = getBlockCount(messageData.blocksReceivedList);													//Get the number of blocks that were received
-		messageData.disorganizedBlocksCount = checkForDisorganizedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);	//Get the number of blocks that were disorganized
-		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);								//Sort the block ID's from lowest to highest
-		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);				//Get the number of blocks that were missing
-
-
-		char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
-		packageResults(messageBuffer, messageData.missingBlockCount);
-		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
-		packageResults(messageBuffer, messageData.disorganizedBlocksCount);
-		sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
+		//char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { '\0' };
+		//packageResults(messageBuffer, messageData.disorganizedBlocksCount);
+		sendto(openSocketHandle, messageBuffer, (int)strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
 
 	} while (true);
 
@@ -226,145 +196,6 @@ int start_server_protocol(int* tcpOrUdp)
 	closesocket(openSocketHandle);
 
 	return SUCCESS;
-}
-
-
-/*
-*  FUNCTION      : cmpfunc
-*  DESCRIPTION   : This method is used to compare two int values when called as the comparison function from qsort
-*  PARAMETERS    : Function parameters are as follows,
-*	const void * a : The first integer
-*	const void * b : The second integer
-*  RETURNS       : int : Returns an integer of the two values subtracted from one another
-*
-*	NOTE: This function was taken entirely from an online tutorial hosted by TurotialsPoint. For more information, please see the reference below
-*	Tutorials Point. (ND). C library function - qsort(). Retrieved on January 20, 2018, from
-		https://www.tutorialspoint.com/c_standard_library/c_function_qsort.htm
-*/
-int cmpfunc(const void * a, const void * b) 
-{
-	return (*(int*)a - *(int*)b);
-}
-
-
-/*
-*  FUNCTION      : getBlockCount
-*  DESCRIPTION   : This method is used to get a count of the number of blocks that were received during transmission
-*  PARAMETERS    : Function parameters are as follows,
-*	int blockIDList[]	: Int array containing the blocks ID's received during the connections lifetime
-*  RETURNS       : int : Returns an integer of how many block ID's were received
-*/
-int getBlockCount(int blockIDList[])
-{
-	int numberOfChars = 0;
-	for (unsigned int index = 0; index < MESSAGE_BUFFER_SIZE_10000; index++)
-	{
-		if (blockIDList[index] != 0)
-		{
-			numberOfChars++;
-		}
-	}
-	return numberOfChars;
-}
-
-
-/*
-*  FUNCTION      : checkForDisorganizedBlocks
-*  DESCRIPTION   : This method is used to compare the ID's of two blocks, and check if they sequentially increase, or if an ID
-*					is incorrect according to the numbering scheme
-*  PARAMETERS    : Function parameters are as follows,
-*	int blockIDList[]		: Int array containing the blocks ID's received during the connections lifetime
-*	int blocksReceivedCount : The count of how many blocks were received (used to limit the loop count when checking the ID's)
-*  RETURNS       : int : Returns an integer of how many block ID's were disorganized
-*/
-int checkForDisorganizedBlocks(int blockIDList[], int blocksReceivedCount)
-{
-
-	/////////////////////////////////////////////////////////////////////////////////////////
-	//
-	// The ID of each element will be compared to see if they increment sequentially by one; if
-	//	the difference between the ID's is not one, then the disorganizedCounter will be incremented
-	// 
-	//  NOTE: In this case, we're not counting the number of missed packets, only if the order in which 
-	//  they arrived was sequential
-	//
-	//	For example: First Comparison
-	//	char blockIDList[] = {1, 3, 7, 4, 5, 6, 10}
-	//	diffBetweenElems = elemTwo - elemOne
-	//	diffBetweenElems = 3 - 1
-	//	diffBetweenElems = 2 Therefore a packet was missed
-	//	
-	//	Increment the disorganizedCount and check the next to elements 7 & 3
-	//
-	//	Second Comparison:
-	//	diffBetweenElems = elemTwo - elemOne
-	//	diffBetweenElems = 7 - 3
-	//	diffBetweenElems = 4 Therefore a packet was missed
-	//
-	//	Increment the disorganizedCount and check the next to elements 4 & 7
-	//	
-	/////////////////////////////////////////////////////////////////////////////////////
-	
-	unsigned int index;
-	int numDisorganizedBlocks = 0;
-	int elemOne = 0;
-	int elemTwo = 0;
-
-	//Only enter the array if there is at least two elements
-	//Default disorganizedCount to 0 when only 1 block received
-	for(index = 0; index < (blocksReceivedCount - 1); index++)
-	{
-		if (blockIDList[index] != 0)
-		{
-			elemOne = blockIDList[index];
-		}
-		if (blockIDList[++index] != 0)
-		{
-			elemTwo = blockIDList[index];
-		}
-		if ((elemOne != 0) && (elemTwo != 0))
-		{
-			if (elemTwo != (elemOne + 1))
-			{
-				numDisorganizedBlocks++;
-			}
-			index--;
-		}
-	}
-
-	return numDisorganizedBlocks;
-}
-
-
-/*
-*  FUNCTION      : countDigits
-*  DESCRIPTION   : This method is used to get a count of the number of digits in number passed in as an argument
-*  PARAMETERS    : const int arg : An integer that will be counted to determine how many digits it contains
-*  RETURNS       : int : Returns an integer of how many digits are in the number
-* 
-*	NOTE: This function was taken entirely from an online post on stackoverflow.com. For more information, please see the reference.
-*		   AShelly. (2012). Count number of digits - which method is most efficient?. Retrieved on January 15, 2018, from
-				https://stackoverflow.com/questions/9721042/count-number-of-digits-which-method-is-most-efficient
-*/
-int countDigits(const int arg)
-{
-	return snprintf(NULL, 0, "%d", arg) - (arg < 0);
-}
-
-
-/*
-*  FUNCTION      : void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
-*  DESCRIPTION   : This method is used to copy the block's ID into the int array for use later when the server examines the results of the transmission
-*  PARAMETERS    : Parameters are as follows,
-*	int blockIDList[]	: Array containing a list of all block ID's received during the transmission
-*	const int blockID	: The blocks ID that will be added to the array
-*	const int freeIndex : The position in the array to write the ID at
-*  RETURNS       : void : Function has no return
-*/
-void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
-{
-	int digitLength = countDigits(blockID);
-	blockIDList[freeIndex] = blockID;
 }
 
 
@@ -381,9 +212,9 @@ void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, c
 {
 	char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = {'\0'};
 	packageResults(messageBuffer, missingBlockCount);
-	send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+	send(acceptedSocketConnection, messageBuffer, (int)strlen(messageBuffer), 0);
 	packageResults(messageBuffer, disorganizedBlockCount);
-	send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+	send(acceptedSocketConnection, messageBuffer, (int)strlen(messageBuffer), 0);
 }
 
 
@@ -484,146 +315,6 @@ void printError(int errorCode)
 			printf("[ERROR]: Unidentified error has occurred");
 			break;
 	}
-}
-
-
-/*
-*  FUNCTION      : getBlockSize
-*  DESCRIPTION   : This method is used to get the block size from the message header,
-*					and convert it to a single decimal value
-*  PARAMETERS    : Function parameters are as follows
-*	char messageBuffer[] : Message sent from the client
-*  RETURNS       : long : Returns an long indicating the block size 
-*/
-long getBlockSize(char messageBuffer[])
-{
-	//Get the block size sub string from the message
-	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
-	int index = 0;
-	for (index = 0; index < BLOCK_SIZE_LENGTH; index++)								
-	{
-		//The block size will never be larger than 4 chars
-		messageProperties[index] = messageBuffer[index];	
-	}
-	messageProperties[index] = '\0';
-
-
-	//Get the decimal value from the string 
-	long blockSize = convertHexToDecimal(messageProperties);
-	free(messageProperties);
-	return blockSize;
-}
-
-
-/*
-*  FUNCTION      : convertHexToDecimal
-*  DESCRIPTION   : This method is used to convert a hexadecimal string of characters into a single integer of equivalent value
-*  PARAMETERS    : Function parameters are as follows
-*	char messageProperties : Pointer to the string containing the message properties
-*  RETURNS       : int : Returns an int cast as a long, representing the decimal value of the hex string
-*/
-int convertHexToDecimal(char* messageProperties)
-{
-	int convertedHex = 0;
-	sscanf(messageProperties, "%x", &convertedHex);
-	return (long)convertedHex;
-}
-
-
-/*
-*  FUNCTION      : getNumberOfBlocks
-*  DESCRIPTION   : This method is used to get the number of expected blocks from the message header, and convert them from
-*				   hex to decimal form
-*  PARAMETERS    : Function parameters are as follows
-*	char messageBuffer[] : Copy of the message array
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
-*/
-int getNumberOfBlocks(char messageBuffer[])
-{
-	char blockCountArray[MESSAGE_PROPERTY_SIZE] = { "" };
-
-
-	//Scan the remainder of the string until the letter 'G' is encountered
-	int i = BLOCK_SIZE_OFFSET;
-	int j = 0;
-	for (i = BLOCK_SIZE_OFFSET; i < (BLOCK_SIZE_OFFSET + BLOCK_SIZE_LENGTH); i++)
-	{
-		blockCountArray[i] = messageBuffer[i + BLOCK_SIZE_OFFSET];	//Block size will always be from index 4 to 7
-
-		//Copy each element of the block count string
-		blockCountArray[j] = messageBuffer[i];
-		j++;
-	}
-	blockCountArray[j] = '\0';
-
-	int blockCount = 0;
-	blockCount = convertHexToDecimal(blockCountArray);
-	return blockCount;
-
-}
-
-
-/*
-*  FUNCTION      : getBlockID
-*  DESCRIPTION   : This method is used to find the block ID in the message header, and convert the hex value to a decimal form
-*  PARAMETERS    : Function parameters are as follows
-*	char messageBuffer[] : Copy of the message array
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
-*/
-int getBlockID(char messageBuffer[])
-{
-	char blockIDSubSet[MESSAGE_PROPERTY_SIZE] = { "" };
-
-	//Copy each element of the block count string
-	for (int i = 0; i < BLOCK_SIZE_LENGTH; i++)
-	{
-		blockIDSubSet[i] = messageBuffer[i + BLOCK_ID_OFFSET];	//Block ID will always be from index 8 - 11
-
-	}
-
-	//Convert the hex string representing the block ID, and return the result
-	int blockID = convertHexToDecimal(blockIDSubSet);
-	return blockID;
-}
-
-
-/*
-*  FUNCTION      : getDifference
-*  DESCRIPTION   : This method is used to get the difference between two integers passed in as arguments
-*  PARAMETERS    : Function parameters are as follows
-*	const int elemOne : Int used to get the difference
-*	const int elemTwo : Int used in the subtraction
-*  RETURNS       : int : Returns an integer of the absolute difference between the two ints
-*/
-int getDifference(const int elemOne, const int elemTwo)
-{
-	return abs(elemOne - elemTwo);
-}
-
-
-/*
-*  FUNCTION      : checkForMissedBlocks
-*  DESCRIPTION   : This method is used to get the number of missing ID's between each element.
-*			       The array of ID's are sorted first, and then a comparison is made to count if
-*				   the ID's increment by 1, or if some numbers are missing
-*  PARAMETERS    : Function parameters are as follows,
-*	int receivedBlockList[] : Array containing the ID's of all the blocks that have been received
-*  RETURNS       : int : Retruns an int that represents the number of blocks missed during transmission
-*/
-int checkForMissedBlocks(int receivedBlockList[], int blocksReceivedCount)
-{
-	int missingBlocks = 0;
-	int elemOne = 0;
-	int elemTwo = 0;
-	for (unsigned int index = 0; index < (blocksReceivedCount - 1); index++)
-	{
-		elemOne = receivedBlockList[index];
-		elemTwo = receivedBlockList[++index];
-		missingBlocks += getDifference(elemOne, elemTwo) - 1;	//Difference - 1 shows the number of missing ID's between each element (eg: 10 - 7 = 3 - 1 = 2 missing ID's (8 & 9))
-		index--;												//Restore index to value before elemTwo was calculated
-	}
-
-	return missingBlocks;
 }
 
 

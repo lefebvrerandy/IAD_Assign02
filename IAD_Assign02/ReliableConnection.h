@@ -25,6 +25,8 @@ private:
 	State state;							//Indicates the connection state as 0 (Disconnected) - 4 (Connected)
 	float timeoutCounter;					//Tracks the elapsed time Update() and ReceivePacket() calls  
 	ReliabilitySystem reliabilitySystem;	//Manages sequence numbers and acks, tracks network stats etc.
+	SOCKET connectedSocket;
+	struct sockaddr_in socketAddress;
 
 public:
 
@@ -272,12 +274,17 @@ public:
 		reliabilitySystem.Reset();
 	};
 
-	int GetHeaderSize() const					{ return BASE_HEADER_SIZE + reliabilitySystem.GetHeaderSize(); }
-	ReliabilitySystem& GetReliabilitySystem()	{ return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
-	void OnStop()								{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-	void OnDisconnect()							{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-	SOCKET connectedSocket;
-	struct sockaddr_in socketAddressDEBUG;
+
+
+	void OnStop(void)								{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	void OnDisconnect(void)							{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	ReliabilitySystem& GetReliabilitySystem(void)	{ return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
+	struct sockaddr_in GetSocketAddressStruct(void) { return socketAddress; }							//
+	SOCKET GetConnectedSocket(void)					{ return connectedSocket; }							//
+	void SetConnectedSocket(SOCKET newSocket)		{ connectedSocket = newSocket; }					//
+	void SetSocketAddress(struct sockaddr_in newAddressStruct) { socketAddress = newAddressStruct; }	//
+	int GetHeaderSize() const								   { return BASE_HEADER_SIZE + reliabilitySystem.GetHeaderSize(); }
+
 
 #pragma endregion
 };

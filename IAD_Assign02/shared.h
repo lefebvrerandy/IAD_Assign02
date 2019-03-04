@@ -5,10 +5,10 @@
 *  FIRST VERSION : 2019-01-08
 *  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application.
 */
-#pragma once
 
 
 //Disable warnings of things that may be considered unsafe if not watched properly 
+#pragma once
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma warning(disable: 4996)
 using namespace std;
@@ -16,24 +16,24 @@ using namespace std;
 
 #pragma region Libraries
 
-
-	//#include <string.h>
 	#include <stdio.h>
+	#include <iostream>
 	#include <stdbool.h>
 	#include <time.h>
 	#include <stdlib.h>
 	#include <math.h>
-	#include <iostream>
 	#include <fstream>
 	#include <string>
 	#include <list>
 	#include <assert.h>
 	#include <vector>
 	#include <list>
-	#include <functional>
-	#include <winsock2.h>		//Windows socket operations
+	//#include <string.h>
+	//#include <functional>
+	#include <winsock2.h>
 	#include <WS2tcpip.h>
-	#include <windows.h>		//Windows API for 32/64 bit application
+	#include <windows.h>
+
 #pragma endregion
 #pragma region Constants
 
@@ -43,7 +43,7 @@ using namespace std;
 	#define MESSAGE_BUFFER_SIZE_5000	5000
 	#define MESSAGE_BUFFER_SIZE_2000	2000
 	#define MESSAGE_BUFFER_SIZE_1000	1000
-	#define MAX_ARGUMENT_LENGTH			15
+	#define MAX_ARGUMENT_LENGTH			100
 	#define SWITCH_OPTIONS				5
 	#define SUCCESS						1
 	#define ERROR_RETURN				0
@@ -70,7 +70,7 @@ using namespace std;
 	#define FILE_READ_ERROR 		-10
 
 
-	//Location ID's for storedDatas command line arguments
+	//Location ID's for saved CLA
 	#define CLA_SOCKET_TYPE			0
 	#define CLA_IP_ADDRESS			1
 	#define CLA_PORT_NUMBER			2
@@ -103,33 +103,45 @@ using namespace std;
 
 	
 
-
-	//Datatype conversions
-	#define MILLISECONDS	1000
-	#define MEGABYTES		(1024*1024)
+	//Reliable Connection
+	#define PROTOCOL_ID					0x11223344
+	#define DELTA_TIME					1.0f / 30.0f
+	#define SEND_RATE					1.0f / 30.0f
+	#define TIME_OUT					5.0f
+	#define PACKET_SIZE					256
 
 
 #pragma endregion
 #pragma region Structs
 
 
-	//Global struct for all client connection info
-	char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
-	/* storedData Breakdown: 
-		[0][] = TCP || UDP
-		[1][] = IP Address
-		[2][] = Port
-		[3][] = Size of buffer to send
-		[4][] = Number of blocks to send 
-	*/
-	
-	const int ProtocolId = 0x11223344;
-	const float DeltaTime = 1.0f / 30.0f;
-	const float SendRate = 1.0f / 30.0f;
-	const float TimeOut = 5.0f;
-	const int PacketSize = 256;
 
-	//
+
+	char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];	//DEBUG REMOVE BEFORE SUBMISSION
+	/* storedData Breakdown:
+	*	[1][] = IP Address
+	*	[2][] = Port
+	*	[3][] = filepath
+	*/
+
+
+	//Global struct for all server/client connection info supplied from the CLA
+	typedef struct
+	{
+		string ipAddress;
+		int port;
+		string filepath;
+		const int ProtocolId = PROTOCOL_ID;
+		const float DeltaTime = DELTA_TIME;
+		const float SendRate = SEND_RATE;
+		const float TimeOut = TIME_OUT;
+		const int PacketSize = PACKET_SIZE;
+	}ConnectionData;
+	static ConnectionData programParameters;
+
+
+
+	//Structure defining the attributes of a packet 
 	struct PacketData
 	{
 		unsigned int sequence;			// packet sequence number
@@ -137,6 +149,14 @@ using namespace std;
 		int size;						// packet size in bytes
 	};
 
+
+	//Structure for keeping time between operations
+	typedef struct {
+
+		double startTime;
+		double endTime;	
+		double elapsedTime;
+	}Timer;
 
 #pragma endregion
 #pragma region Enums
