@@ -139,11 +139,11 @@
     <ClInclude Include="shared.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="TestFiles\Test.txt" />
+    <Text Include="source\Test.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="TestFiles\Test.dat" />
-    <None Include="TestFiles\Test.exe" />
+    <None Include="source\Test.dat" />
+    <None Include="source\Test.exe" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

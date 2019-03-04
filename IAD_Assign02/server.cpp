@@ -12,7 +12,7 @@
 #include "shared.h"
 #include "FileIO.h"
 #include "ReliableConnection.h"
-
+#include "FlowControl.h"
 
 
 /*
@@ -91,7 +91,7 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 		fd_set readFDs;
-		FD_ZERO(&readFDs);							//Clear the file descriptor
+		FD_ZERO(&readFDs);					//Clear the file descriptor
 		FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
 		int socketSet = setsockopt(openSocketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		if (!(socketSet >= 0))
@@ -112,8 +112,29 @@ int start_server_protocol(int* tcpOrUdp)
 			//recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
 
-		//recieveBuffer now contains the filename and extention. Lets store it
-		programParameters.fileExtension = recieveBuffer;
+		//recieveBuffer header contains the fileReadMode (Binary vs. Ascii), extention, and filename. Lets store it
+		programParameters.fileExtension += recieveBuffer[1];	//First char of the extension
+		programParameters.fileExtension += recieveBuffer[2];	//Second char
+		programParameters.fileExtension += recieveBuffer[3];	//Third char
+
+
+		//Index 4 - 6 are used by the reliabilitySystem for packet tracking
+		//unsigned int LocalSequence = convertCharToInt(recieveBuffer[4]);
+		//unsigned int ack = convertCharToInt(recieveBuffer[5]);
+		//unsigned int ack_bits = convertCharToInt(recieveBuffer[6]);
+		
+
+		float sendAccumulator = 0.0f;
+		float statsAccumulator = 0.0f;
+		FlowControl flowControl;
+		/*
+		* Delta time is a global defaulted to 1/30
+		* Get the round trip time value from the ReliabilitySystem, and set it to a large number. This defaults the clients connection to be in
+		*	bad mode before a message is sent
+		*/
+		flowControl.Update(programParameters.DeltaTime, (reliableConn.GetReliabilitySystem().GetRoundTripTime() * 1000.0f));
+		float sendRate = flowControl.GetSendRate();		//Returns 30 if mode = Good, or 10 if mode = Bad
+
 
 		//char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
 		while (true)
@@ -160,14 +181,14 @@ int start_server_protocol(int* tcpOrUdp)
 		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 		// Fill recieveBuffer with hashvalue and send
 		recieveBuffer = hashValue;
-		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
+		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress), , );
 
 		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
 		// Fill recieveBuffer with time and send
 		itoa(totalTime, recieveBuffer,10);	// Store total in recieveBuffer for sending
 		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress));
 
-		// All done
+		//All done
 		free(recieveBuffer);
 	} while (true);
 

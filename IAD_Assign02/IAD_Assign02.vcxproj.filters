@@ -9,12 +9,11 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="SourceCopy">
       <UniqueIdentifier>{70dcf63c-0dd9-43c3-8e94-76ce56b08cc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{6d288f21-c6f7-477c-ad3c-3b58e2e9b921}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -73,10 +72,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TestFiles\Test.dat" />
-    <None Include="TestFiles\Test.exe" />
+    <None Include="source\Test.dat">
+      <Filter>source</Filter>
+    </None>
+    <None Include="source\Test.exe">
+      <Filter>source</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="TestFiles\Test.txt" />
+    <Text Include="source\Test.txt">
+      <Filter>source</Filter>
+    </Text>
   </ItemGroup>
 </Project>

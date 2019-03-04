@@ -73,11 +73,12 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 
 	//Stage 5: Read in the file in binary or ascii mode
+	string sourceString = ".//source//" + programParameters.fileExtension;
 	string fileContents = NULL;
 	switch (programParameters.readMode)
 	{
 		case Binary:
-			fileContents = FileIO::ReadBinaryFile(programParameters.filepath);
+			fileContents = FileIO::ReadBinaryFile(sourceString);
 			
 			size_t extension = programParameters.filepath.find_last_of(".");
 			programParameters.fileExtension.substr(extension + 1);
@@ -90,7 +91,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 			break;
 
 		case Ascii:
-			fileContents = FileIO::ReadAsciiFile(programParameters.filepath);
+			fileContents = FileIO::ReadAsciiFile(sourceString);
 			if (fileContents.empty())
 			{
 				//If the file can't be read, then the tests can't be completed; return with an error
@@ -101,21 +102,48 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 	}
 	try
 	{
+		//Get the md5 value of the file
+		LPCSTR filename = sourceString.c_str();
+		char* hashValue = GetMd5Value(filename);
+
+
 		//Stage 6: Package the message, and send it to the server
 		reliableConn.SendPacket((unsigned char *)fileContents.c_str(), sizeof((unsigned char *)fileContents.c_str()), socketAddress, sizeof(socketAddress), programParameters.readMode, programParameters.fileExtension);
 
 
 		//Stage 7: Receive the servers response, and print the results
 		unsigned char* recieveBuffer = (unsigned char*)malloc(sizeof(char) * (PACKET_SIZE));
-		reliableConn.ReceivePacket(recieveBuffer, sizeof(recieveBuffer), socketAddress);
+		while (reliableConn.ReceivePacket(recieveBuffer, sizeof(recieveBuffer), socketAddress))
+		{
+			
+			break;
+		}
+
 		free(recieveBuffer);
+		if ( statsAccumulator >= 0.25f )
+		{
+					
+			//Get the round trip time between client and server
+			float roundTripTime = reliableConn.GetReliabilitySystem().GetRoundTripTime();
+		
+		
+			//Get the packet metrics
+			unsigned int sent_packets = reliableConn.GetReliabilitySystem().GetSentPackets();
+			unsigned int acked_packets = reliableConn.GetReliabilitySystem().GetAckedPackets();
+			unsigned int lost_packets = reliableConn.GetReliabilitySystem().GetLostPackets();
+		
+		
+			//Get the bandwidth metrics
+			float sent_bandwidth = reliableConn.GetReliabilitySystem().GetSentBandwidth();
+			float acked_bandwidth = reliableConn.GetReliabilitySystem().GetAckedBandwidth();
+		}				
 
 
 		printf("Transmissison Results: \n");
-		//printf("File Size: %i\n", CalculateFileSize());
-		//printf("Transfer Speed: %i \n", );
-		//printf("Sent file MD5: %s \n", sentFileMD5);
-		//printf("Recieved file MD5: %s \n", recvFileMD5);
+		printf("File Size: %i\n", (int)sizeof((unsigned char)fileContents.c_str()));
+		//printf("Transfer Speed: %i \n", recieveBuffer);
+		printf("Sent file MD5: %s \n", hashValue);
+		//printf("Recieved file MD5: %s \n", recvMD5);
 		throw new exception;
 	}
 	catch (...)
@@ -144,23 +172,3 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 	int newBoundSocket = connect(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(struct sockaddr));
 	return newBoundSocket;
 }
-
-
-
-
-/*
-*  FUNCTION      : DEBUG
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : Parameters are as follows,
-*  RETURNS       : DEBUG
-*/
-int CalculateFileSize(const unsigned char* file)
-{
-	int fileSize = 0;
-
-
-
-	return fileSize;
-}
-
-//sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);		//DEBUG REMOVE BEFORE SUBMISSION
