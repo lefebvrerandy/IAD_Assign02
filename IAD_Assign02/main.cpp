@@ -57,7 +57,7 @@ int proc_arguments(int argumentCount, char* args[])
 			strcpy(ipAddress, (char*)args);
 			return 2;
 		}
-		else 
+		else
 		{
 			strcpy(port, "3000");
 			return -1;
@@ -69,6 +69,119 @@ int proc_arguments(int argumentCount, char* args[])
 		operatingMode = Server;
 		return 1;
 	}
+}
+
+
+
+#pragma region FlowControl
+/*
+ * Best way I can describe the class, is as an indicator of network performance. The class never directly interacts with the sockets, Address, or the underlying networking module.
+ * - It sits in main, and signals the applications network performance by setting it's mode between "Good" or "Bad" every time it's Update method is called. 
+ * - A "Good" network has a "roundTripTime" value of < 250 (unknown units). The apps "SendRate" will likewise toggle between  30 (when mode = Good) and 10 (when mode = bad)
+ * - It's private "good_conditions_time" attribute is used as a counter of how long has the network been set as "Good". Every time Update is called, if the mode = Good, 
+ *		the good_conditions_time is incremented, if mode = Bad, good_conditions_time is reset to 0 
+ */
+class FlowControl
+{
+
+public:
+
+	//Constructor 
+	FlowControl() 
+	{
+		Reset();
+	}
+
+	//In main() -> Used to reset the state of the FlowControl module once the application is set to server mode, and is showing all connections are in the green
+	void Reset()
+	{
+		flowControlMode = Bad;
+		penalty_time = 4.0f;
+		good_conditions_time = 0.0f;
+		penalty_reduction_accumulator = 0.0f;
+	}
+
+
+	//deltaTime is defined above as a global (it's the elapsed time (in milliseconds?) since the last Update was performed)
+	//Once ReliableConnection.IsConnected = true in main(), call this method to check the connection status again, and adjust it as required 
+	void Update(float deltaTime, float roundTripTime)
+	{
+		const float RTT_Threshold = 250.0f;		//Threshold for signaling a passable connection (i.e. < 250) vs. a bad connection (i.e. > 250)
+		if (flowControlMode == Good)
+		{
+			
+			//If the round trip time is too long, then downgrade our network status to "bad" mode indicating the poor connection
+			if (roundTripTime > RTT_Threshold)
+			{
+
+				//Set mode from Good -> Bad
+				printf( "*** dropping to bad mode ***\n" );
+				flowControlMode = Bad;
+
+
+				//good_conditions_time is field of this class 
+				if (good_conditions_time < 10.0f && penalty_time < 60.0f )
+				{
+					penalty_time *= 2.0f;
+					if ( penalty_time > 60.0f )
+						penalty_time = 60.0f;
+					printf( "penalty time increased to %.1f\n", penalty_time );
+				}
+				good_conditions_time = 0.0f;
+				penalty_reduction_accumulator = 0.0f;
+				return;
+			}
+			
+			good_conditions_time += deltaTime;
+			penalty_reduction_accumulator += deltaTime;
+			
+			if ( penalty_reduction_accumulator > 10.0f && penalty_time > 1.0f )
+			{
+				penalty_time /= 2.0f;
+				if ( penalty_time < 1.0f )
+					penalty_time = 1.0f;
+				printf( "penalty time reduced to %.1f\n", penalty_time );
+				penalty_reduction_accumulator = 0.0f;
+			}
+		}
+
+		//During the update sequence, check if the connection was downgraded to "bad" quality"
+		if ( flowControlMode == Bad )
+		{
+				
+			if ( roundTripTime <= RTT_Threshold )		//Threshold set to 250.0f
+			{
+				good_conditions_time += deltaTime;		//Update the time we've had a good connection since the last check
+			}
+			else
+			{
+				good_conditions_time = 0.0f;			//Reset the good connection time as our connection is now rated as bad
+			}
+			if ( good_conditions_time > penalty_time )
+			{
+				printf( "*** upgrading to good mode ***\n" );
+				good_conditions_time = 0.0f;
+				penalty_reduction_accumulator = 0.0f;
+				flowControlMode = Good;
+				return;
+			}
+		}
+	}
+
+	//Modulate our sending rate based on the current network status (good vs. bad)
+	float GetSendRate()
+	{
+		return flowControlMode == Good ? 30.0f : 10.0f;	//If mode == Good return a send rate of 30, else return 10
+	}
+
+
+private:
+	Mode flowControlMode;								//Declaration of the Enum defined above
+	float penalty_time;						//
+	float good_conditions_time;				//
+	float penalty_reduction_accumulator;	//
+};
+#pragma endregion
 
 
 	///	OLD CODE
@@ -156,122 +269,3 @@ int proc_arguments(int argumentCount, char* args[])
 	//	return 3;
 	//}
 	//return 0;
-}
-//
-//
-///*
-//*  FUNCTION      : validateAddress
-//*  DESCRIPTION   : This function is used to check if the IP address supplied from the command line, is valid according to the
-//*					standards set by IPv4 (ie. its a 32-bit number of form DDD.DDD.DDD.DDD)
-//*  PARAMETERS    : char address[] : String containing the IP address
-//*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
-//*/
-int validateAddress(char address[])
-{
-	int addressValid = -1;
-
-
-	//Check if the address in the form of IPv4.
-	int errorCount = 0;
-	int IPaddressLength = (int)strlen(address);
-	if (IPaddressLength == 32)												//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
-	{
-		int index = 0;
-		for (index = 0; index < IPaddressLength; index++)
-		{
-			if ((index == 3) || (index == 7) || (index == 11) )
-			{
-				if (address[index] != '.')
-				{
-					errorCount++;
-				}
-			}
-			else
-			{
-				if (!((address[index] >= '0') && (address[index] <= '9')))	//Check if the character is a digit of 0 - 9
-				{
-					errorCount++;
-				}
-			}
-		}
-
-		if (errorCount > 0)
-		{
-			addressValid = -1;		//Errors detected, address was not valid
-		}
-
-		else
-		{
-			addressValid = 1;		//No errors, address is valid
-		}
-	}
-
-
-
-	return addressValid;
-
-} 
-
-///*
-//*  FUNCTION      : validatePort
-//*  DESCRIPTION   : This function is used to check if the port CLA is valid
-//*  PARAMETERS    : char* portString : String captured from the CLA indicating the target port number
-//*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
-//*/
-//int validatePort(char* portString)
-//{
-//	int portValid = 0;
-//	portValid = convertCharToInt(portString);			//return of -1 indicates an error has occurred
-//	if ((portValid > 0) && (portValid < 65535))
-//	{
-//		return portValid;
-//	}
-//	return ERROR_RETURN;
-//
-//}//Done
-//
-//
-///*
-//*  FUNCTION      : validateBlockSize
-//*  DESCRIPTION   : This function is used to check if the block size is valid
-//*  PARAMETERS    : char* blockSizeString : String containing the block size
-//*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
-//*/
-//int validateBlockSize(char* blockSizeString)
-//{
-//	int blockSizeValid = convertCharToInt(blockSizeString);
-//	switch (blockSizeValid)
-//	{
-//	case MESSAGE_BUFFER_SIZE_1000:
-//	case MESSAGE_BUFFER_SIZE_2000:
-//	case MESSAGE_BUFFER_SIZE_5000:
-//	case MESSAGE_BUFFER_SIZE_10000:
-//		blockSizeValid = 1;				//Valid block size
-//		break;
-//
-//	default:
-//		blockSizeValid = ERROR_RETURN;	//Invalid block size
-//		break;
-//	}
-//
-//	return blockSizeValid;
-//
-//}//Done
-//
-//
-///*
-//*  FUNCTION      : validateNumOfBlocks
-//*  DESCRIPTION   : This function is used to ensure the block count doesn't exceed a total size of 10,000
-//*  PARAMETERS    : char* blockCount : String representing the number of blocks to send over the network
-//*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
-//*/
-//int validateNumOfBlocks(char* blockCount)
-//{
-//	int blocksValid = convertCharToInt(blockCount);
-//	if (blocksValid <= 10000)
-//	{
-//		return blocksValid;							//Valid block count
-//	}
-//	return ERROR_RETURN;
-//
-//}//Done

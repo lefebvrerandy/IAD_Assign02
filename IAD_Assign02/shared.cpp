@@ -26,7 +26,7 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 	SOCKET newSocket = socket(addressFamily, socketType, protocolType);
 	return newSocket;
 
-}//Done
+}
 
 
 /*
@@ -57,4 +57,63 @@ int convertCharToInt(char* stringToConvert)
 	sscanf(stringToConvert, "%d", &returnNumber);
 	return returnNumber;
 
-}//Done
+}
+
+
+
+/*
+*  FUNCTION      : validateAddress
+*  DESCRIPTION   : This function is used to check if the IP address supplied from the command line, is valid according to the
+*					standards set by IPv4 (ie. its a 32-bit number of form DDD.DDD.DDD.DDD)
+*  PARAMETERS    : char address[] : String containing the IP address
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
+*/
+int validateAddress(char address[])
+{
+	int addressValid = -1;
+
+	//Check if the address in the form of IPv4.
+	int errorCount = 0;
+	int IPaddressLength = (int)strlen(address);
+	if (IPaddressLength == 32)												//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
+	{
+		int index = 0;
+		for (index = 0; index < IPaddressLength; index++)
+		{
+			if ((index == 3) || (index == 7) || (index == 11))
+			{
+				if (address[index] != '.')
+				{
+					errorCount++;
+				}
+			}
+			else
+			{
+				if (!((address[index] >= '0') && (address[index] <= '9')))	//Check if the character is a digit of 0 - 9
+				{
+					errorCount++;
+				}
+			}
+		}
+		if (errorCount > 0) { addressValid = -1; }
+		else { addressValid = 1; }
+	}
+	return addressValid;
+}
+
+/*  FUNCTION      : validatePort
+*  DESCRIPTION   : This function is used to check if the port CLA is valid
+*  PARAMETERS    : char* portString : String captured from the CLA indicating the target port number
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
+*/
+int validatePort(char* portString)
+{
+	int portValid = 0;
+	portValid = convertCharToInt(portString);			//return of -1 indicates an error has occurred
+	if ((portValid > 0) && (portValid < 65535))
+	{
+		return portValid;
+	}
+	return ERROR_RETURN;
+
+}

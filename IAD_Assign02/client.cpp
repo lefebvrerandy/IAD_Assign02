@@ -86,15 +86,13 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 	try
 	{
 		//Stage 6: Package the message
-		unsigned char* messageBuffer = NULL;
-		packageMessage(messageBuffer);
-		reliableConn.SendPacket(messageBuffer, sizeof(messageBuffer), socketAddress, sizeof(socketAddress));
+		reliableConn.SendPacket((unsigned char *)asciiFileContents.c_str(), sizeof((unsigned char *)asciiFileContents.c_str()), socketAddress, sizeof(socketAddress));
 
 
 		//Stage 7: DEBUG
-		memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-		reliableConn.ReceivePacket(messageBuffer, sizeof(messageBuffer), socketAddress);
-		free(messageBuffer);
+		unsigned char* recieveBuffer = (unsigned char*)malloc(sizeof(char) * (PACKET_SIZE));
+		reliableConn.ReceivePacket(recieveBuffer, sizeof(recieveBuffer), socketAddress);
+		free(recieveBuffer);
 		throw new exception;
 	}
 	catch (...)
@@ -122,29 +120,6 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 {
 	int newBoundSocket = connect(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(struct sockaddr));
 	return newBoundSocket;
-}
-
-
-/*
-*  FUNCTION      : CreateMessageBuffer
-*  DESCRIPTION   : This function is used to 
-*  PARAMETERS    : Parameters are as follows,
-*  RETURNS       : char* : The function has no return value
-*/
-void packageMessage(unsigned char* message)
-{
-	
-	//unsigned char* returnArray = (unsigned char*) malloc(sizeof(char) * (bufferSize + 1));
-	//unsigned char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
-
-
-	//Set the message buffer's properties
-	//setMessageProperties(messageProperties, bufferSize, numberOfBlocks, currentMsgNum);
-	//strcpy(returnArray, messageProperties);
-	//
-
-	////Find the amount of space occupied by the message properties, and offset the index
-	//int propertyLength = strlen(returnArray);	
 }
 
 

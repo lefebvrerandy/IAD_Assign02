@@ -160,6 +160,13 @@ using namespace std;
 
 #pragma endregion
 #pragma region Enums
+	
+	//Define the Enum used to describe the operating mode of the FlowControl module
+	enum Mode 
+	{ 
+		Good,
+		Bad 
+	};				
 
 	//Enumerable for setting the connection state of the client/server
 	enum State
@@ -173,14 +180,12 @@ using namespace std;
 
 
 	//Enumerable for defining the state of the client and server
-	enum Mode
+	enum OperatingMode
 	{
 		Client, 
 		Server
 	};	
-
-
-	Mode operatingMode;
+	OperatingMode operatingMode;
 	char ipAddress[10];
 	char port[10];
 
@@ -195,6 +200,7 @@ using namespace std;
 	int proc_arguments(int argumentCount, char* args[]);
 	int validateAddress(char address[]);
 	void printError(int errorCode);
-
+	int validateAddress(char address[]);
+	int validatePort(char* portString);
 
 #pragma endregion
