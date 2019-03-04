@@ -36,7 +36,11 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 int convertCharToInt(char* stringToConvert)
 {
 	int returnNumber = 0;
-	sscanf(stringToConvert, "%d", &returnNumber);
+	try
+	{
+		sscanf(stringToConvert, "%d", &returnNumber);
+	}
+	catch (...) { return ERROR_RETURN; }
 	return returnNumber;
 }
 

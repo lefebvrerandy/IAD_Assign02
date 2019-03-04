@@ -46,8 +46,8 @@ using namespace std;
 	#define SWITCH_OPTIONS				5
 	#define SUCCESS						1
 	#define ERROR_RETURN				0
-	#define START_CLIENT				1
-	#define START_SERVER				2
+	#define START_SERVER				1
+	#define START_CLIENT				2
 	#define ROUND_TRIP_THRESHOLD		255
 	#define PACKET_HEADER_SIZE			4
 
@@ -76,6 +76,7 @@ using namespace std;
 	//Location ID's for saved CLA
 	#define CLA_SOCKET_TYPE			0
 	#define CLA_IP_ADDRESS			1
+	#define CLA_PORT_NUMBER_SERVER	1
 	#define CLA_PORT_NUMBER			2
 	#define CLA_FILEPATH			3
 	#define CLA_FILE_READ_MODE		4

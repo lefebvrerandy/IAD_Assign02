@@ -53,29 +53,39 @@ int proc_arguments(int argumentCount, char* args[])
 
 	try
 	{
-		if (argumentCount >= 2)
+		if (argumentCount > 2)
 		{
 			//Client
-			if (!validateAddress((char*)args))
-			{
-				throw new exception();
-			}
+			//if (!validateAddress((char*)args[CLA_IP_ADDRESS]))
+			//{
+			//	throw new exception();
+			//}
 			if (!validatePort((char*)args[CLA_PORT_NUMBER]))
 			{
 				throw new exception();
 
 			}
+			printf("%s\n", args[CLA_IP_ADDRESS]);
+			printf("%s\n", args[CLA_PORT_NUMBER]);
+			printf("%s\n", args[CLA_FILEPATH]);
+			printf("%s\n", args[CLA_FILE_READ_MODE]);
 			programParameters.ipAddress = string((char*)args[CLA_IP_ADDRESS]);
 			programParameters.port = convertCharToInt((char*)args[CLA_PORT_NUMBER]);
 			programParameters.filepath = string((char*)args[CLA_FILEPATH]);
 			programParameters.readMode = IdentifyReadMode(args[CLA_FILE_READ_MODE]);
 			return START_CLIENT;
 		}
-		else
+		else if (argumentCount == 2)
 		{
 			//Server
-			programParameters.port = convertCharToInt((char*)args[CLA_PORT_NUMBER]);
+			programParameters.port = convertCharToInt((char*)args[CLA_PORT_NUMBER_SERVER]);
 			return START_SERVER;
+		}
+		else
+		{
+			// Need at least one argument..
+			// 1 argument for server
+			// 4 for client
 		}
 	}
 	catch (...) { return ERROR_RETURN; }
