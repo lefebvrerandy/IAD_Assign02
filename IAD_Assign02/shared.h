@@ -115,16 +115,6 @@ using namespace std;
 #pragma region Structs
 
 
-
-
-	char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];	//DEBUG REMOVE BEFORE SUBMISSION
-	/* storedData Breakdown:
-	*	[1][] = IP Address
-	*	[2][] = Port
-	*	[3][] = filepath
-	*/
-
-
 	//Global struct for all server/client connection info supplied from the CLA
 	typedef struct
 	{

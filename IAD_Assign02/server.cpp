@@ -25,13 +25,11 @@
 */
 int start_server()
 {
-	int tcpArray[2] = { {SOCK_STREAM},{IPPROTO_TCP} };
 	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
+
 	//Spawn two threads. One for TCP, one for UDP
-#if defined _WIN32
 	HANDLE thread_windows_server[2];
 
-	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpArray, 0, NULL);
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
 
 	printServerProperties();
@@ -42,29 +40,6 @@ int start_server()
 	{
 		CloseHandle(thread_windows_server[i]);
 	}
-
-#elif defined __linux__
-	pthread_t thread_linux_server[2];
-	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)tcpArray) != 0)
-	{
-		// An error has occurred
-		printf("Could not create Thread.");
-	}
-	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)udpArray) != 0)
-	{
-		// An error has occurred
-		printf("Could not create Thread.");
-	}
-
-	for (int i = 0; i < 2; i++)
-	{
-		if (pthread_join(thread_linux_server[i], NULL) != 0)
-		{
-			printf("Cannot join Threads.");
-		}
-	}
-
-#endif
 
 	return 0;
 }
@@ -248,7 +223,7 @@ void printServerProperties(void)
 	struct hostent *host_entry;
 	int hostname;
 	char hostPort[PORT_LENGTH];
-	strcpy(hostPort, storedData[CLA_PORT_NUMBER]);
+	strcpy(hostPort, port);
 	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 	host_entry = gethostbyname(hostbuffer);
 	IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
