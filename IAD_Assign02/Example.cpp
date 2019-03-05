@@ -338,7 +338,7 @@
 //
 //		//show packets that were acked this frame
 //		#ifdef SHOW_ACKS
-//		unsigned int * acks = NULL;
+//		unsigned int * acks ;
 //		int ack_count = 0;
 //		connection.GetReliabilitySystem().GetAcks( &acks, ack_count );
 //		if ( ack_count > 0 )

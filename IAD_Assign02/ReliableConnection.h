@@ -133,11 +133,17 @@ public:
 	*/
 	int ReceivePacket(unsigned char data[], int bufferSize, struct sockaddr_in socketAddress)
 	{
-		if (bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
+		if ((int)bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
 		unsigned char* packet = (unsigned char*)malloc(bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);	//Base header size set to 4
+		char receivePacket[256];
+		memset((void*)receivePacket, 0, (sizeof(receivePacket)));
+		SOCKET sender_addr;
+		socklen_t fromLength = sizeof(sender_addr);
 		int len = sizeof(socketAddress);
 
 		//Receive a message from the socket
+		int bytes_read =	recvfrom(connectedSocket,	 (char*)receivePacket,		bufferSize,				0, (sockaddr*)&sender_addr,	&fromLength);
+		memcpy(packet, &receivePacket, sizeof(receivePacket));
 		int bytes_read = recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, &len);
 
 

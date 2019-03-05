@@ -780,7 +780,7 @@
 //		}
 //
 //		int ack_count = 0;
-//		unsigned int * acks = NULL;
+//		unsigned int * acks ;
 //		client.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //		CHECK_ACKS
 //			for (int i = 0; i < ack_count; ++i)
@@ -882,7 +882,7 @@
 //			}
 //
 //			int ack_count = 0;
-//			unsigned int * acks = NULL;
+//			unsigned int * acks ;
 //			client.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //			CHECK_ACKS
 //				for (int i = 0; i < ack_count; ++i)
@@ -912,7 +912,7 @@
 //		}
 //
 //		int ack_count = 0;
-//		unsigned int * acks = NULL;
+//		unsigned int * acks ;
 //		server.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //		CHECK_ACKS
 //			for (int i = 0; i < ack_count; ++i)
@@ -1010,7 +1010,7 @@
 //			}
 //
 //			int ack_count = 0;
-//			unsigned int * acks = NULL;
+//			unsigned int * acks ;
 //			client.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //			CHECK_ACKS
 //				for (int i = 0; i < ack_count; ++i)
@@ -1041,7 +1041,7 @@
 //		}
 //
 //		int ack_count = 0;
-//		unsigned int * acks = NULL;
+//		unsigned int * acks ;
 //		server.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //		CHECK_ACKS
 //			for (int i = 0; i < ack_count; ++i)
@@ -1149,7 +1149,7 @@
 //		}
 //
 //		int ack_count = 0;
-//		unsigned int * acks = NULL;
+//		unsigned int * acks ;
 //		client.GetReliabilitySystem().GetAcks(&acks, ack_count);
 //		CHECK_ACKS
 //			for (int i = 0; i < ack_count; ++i)
