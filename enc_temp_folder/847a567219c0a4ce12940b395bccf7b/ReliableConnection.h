@@ -134,7 +134,7 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	void WriteInteger(unsigned char* data, unsigned int value)
+	void WriteInteger(unsigned char * data, unsigned int value)
 	{
 		data[0] = (unsigned char)(value >> 24);
 		data[1] = (unsigned char)((value >> 16) & 0xFF);

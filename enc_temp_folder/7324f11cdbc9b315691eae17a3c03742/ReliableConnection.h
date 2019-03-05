@@ -120,7 +120,7 @@ public:
 	*
 	* NOTE: Called from SendPacket(), after sequence, ack, and ack_bits, are initialized, and before the message is sent
 	*/
-	void WriteHeader(unsigned char* header, unsigned int sequence, unsigned int ack, unsigned int ack_bits)
+	void WriteHeader(unsigned char * header, unsigned int sequence, unsigned int ack, unsigned int ack_bits)
 	{
 		WriteInteger(header, sequence);
 		WriteInteger(header + 4, ack);
@@ -134,7 +134,7 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	void WriteInteger(unsigned char* data, unsigned int value)
+	void WriteInteger(unsigned char * data, unsigned int value)
 	{
 		data[0] = (unsigned char)(value >> 24);
 		data[1] = (unsigned char)((value >> 16) & 0xFF);

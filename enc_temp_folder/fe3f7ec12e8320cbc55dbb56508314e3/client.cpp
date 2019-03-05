@@ -84,7 +84,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 			case Binary:
 				fileContents = FileIO::ReadBinaryFile(sourceString);
 				extension = programParameters.filepath.find_last_of(".");
-				programParameters.fileExtension = programParameters.filepath.substr(extension + 1);
+				programParameters.fileExtension.substr(extension);
 				if (fileContents.empty())
 				{
 					//If the file can't be read, then the tests can't be completed; return with an error
