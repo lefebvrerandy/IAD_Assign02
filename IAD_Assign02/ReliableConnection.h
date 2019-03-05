@@ -56,6 +56,7 @@ public:
 	{
 		//RELIABLE_CONN_HEADER_SIZE is a global set to 12					
 		unsigned char* messageContainer = (unsigned char*)malloc(messageSize + RELIABLE_CONN_HEADER_SIZE);
+		memset((void*)messageContainer, 0, (sizeof(messageContainer)));
 
 
 		/*
@@ -63,28 +64,22 @@ public:
 		*  otherwise, they are tracked, and incremented as messages are exchanged
 		*  These don't need to be touched as far as I know
 		*/
-		int seq = reliabilitySystem.GetLocalSequence() + 5;		//Local sequence number for most recently sent packet
-		int ack = reliabilitySystem.GetRemoteSequence() + 1;		//Remote sequence number for most recently received packet
+		int seq = reliabilitySystem.GetLocalSequence();		//Local sequence number for most recently sent packet
+		int ack = reliabilitySystem.GetRemoteSequence();	//Remote sequence number for most recently received packet
 		int ack_bits = reliabilitySystem.GenerateAckBits();	//Count of the acknowledged bits
 
 
-		messageContainer[0] = reinterpret_cast<char>(&seq);
-		messageContainer[2] = '0' + ack;
-		messageContainer[4] = (unsigned char)ack_bits;
-
-		//memcpy(messageContainer, (char*)sequence, 2);
-		//memcpy(messageContainer + 4, (char*)ack, 2);
-		//memcpy(messageContainer + 8, (char*)ack_bits, 2);
-		messageContainer[0] = reinterpret_cast<unsigned char>(&seq);
-		messageContainer[2] = (unsigned char)ack;
-		messageContainer[4] = (unsigned char)ack_bits;
-
-		memcpy(messageContainer + RELIABLE_CONN_HEADER_SIZE, packetData, messageSize);
+		//
+		messageContainer[0] = '0' + seq;
+		messageContainer[1] = '0' + ack;
+		messageContainer[2] = '0' + ack_bits;
+		memcpy(messageContainer + 4, packetData, messageSize);
 
 
 		//Define the outbound packet, and add 5 bytes of extra space for the IP address 
 		// data in the first 5 indexes
 		unsigned char* packet = (unsigned char*)malloc(messageSize + PACKET_HEADER_SIZE);
+		memset((void*)packet, 0, (sizeof(packet)));
 		if (fileReadMode == Ascii)
 		{
 			packet[0] = (unsigned char)('A');
@@ -144,7 +139,6 @@ public:
 		//Receive a message from the socket
 		int bytes_read =	recvfrom(connectedSocket,	 (char*)receivePacket,		bufferSize,				0, (sockaddr*)&sender_addr,	&fromLength);
 		memcpy(packet, &receivePacket, sizeof(receivePacket));
-		int bytes_read = recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, &len);
 
 
 		//

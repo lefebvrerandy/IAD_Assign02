@@ -92,20 +92,19 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 				}
 				break;
 
-		case Ascii:
-			fileContents = FileIO::ReadAsciiFile(sourceString);
-			extension = programParameters.filepath.find_last_of(".");
-			programParameters.fileExtension = programParameters.filepath.substr(extension+1);
-			if (fileContents.empty())
-			{
-				//If the file can't be read, then the tests can't be completed; return with an error
-				printError(FILE_READ_ERROR);
-				return FILE_READ_ERROR;
-			}
-			break;
-	}
-	try
-	{
+			case Ascii:
+				fileContents = FileIO::ReadAsciiFile(sourceString);
+				extension = programParameters.filepath.find_last_of(".");
+				programParameters.fileExtension = programParameters.filepath.substr(extension + 1);
+				if (fileContents.empty())
+				{
+					//If the file can't be read, then the tests can't be completed; return with an error
+					printError(FILE_READ_ERROR);
+					return FILE_READ_ERROR;
+				}
+				break;
+		}
+	
 		//Get the md5 value of the file
 		LPCSTR filename = sourceString.c_str();
 		char* hashValue = GetMd5Value(filename);
