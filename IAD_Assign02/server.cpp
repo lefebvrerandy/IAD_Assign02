@@ -73,12 +73,13 @@ int start_server_protocol(int* tcpOrUdp)
 	//Stage 2: Initialize the socket struct, and bind to the open socket
 	struct sockaddr_in socketAddress = intitializeSocket();
 	struct sockaddr_in sender_addr;
-	auto boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
+	auto boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(sockaddr_in));
 	if (!(boundSocketHandle > SOCKET_ERROR))
 	{
 		printError(SOCKET_BIND_ERROR);				
 		return SOCKET_BIND_ERROR;			
 	}
+	FlowControl flowControl;
 	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
 	reliableConn.SetConnectedSocket(openSocketHandle);
 	reliableConn.SetSocketAddress(socketAddress);
@@ -88,15 +89,15 @@ int start_server_protocol(int* tcpOrUdp)
 		//Stage 4: Accept the incoming client connection
 
 
-		fd_set readFDs;
-		FD_ZERO(&readFDs);					//Clear the file descriptor
-		FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
-		int socketSet = setsockopt(openSocketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-		if (!(socketSet >= 0))
-		{
-			printError(SOCKET_SETTINGS_ERROR);
-			return SOCKET_SETTINGS_ERROR;		//Set return to -1, and print an error for the stage of connection
-		}
+		//fd_set readFDs;
+		//FD_ZERO(&readFDs);					//Clear the file descriptor
+		//FD_SET(openSocketHandle, &readFDs);	//Set the accepted socket as part of the file descriptor array
+		//int socketSet = setsockopt(openSocketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+		//if (!(socketSet >= 0))
+		//{
+		//	printError(SOCKET_SETTINGS_ERROR);
+		//	return SOCKET_SETTINGS_ERROR;		//Set return to -1, and print an error for the stage of connection
+		//}
 
 		int len = sizeof(sender_addr);
 
@@ -104,13 +105,13 @@ int start_server_protocol(int* tcpOrUdp)
 		clock_t timeRequired = clock();
 		int recvStatus = 0;
 		char receiveBuffer[256];
+		memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 
 		while (recvStatus <= 0)
 		{
-			memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
-			recvStatus = reliableConn.ReceivePacket((unsigned char*)receiveBuffer, sizeof(receiveBuffer), socketAddress);
+			recvStatus = reliableConn.ReceivePacket((char*)receiveBuffer, sizeof(receiveBuffer), socketAddress);
 			Sleep(10);
-		} 
+		}
 		//recieveBuffer header contains the fileReadMode (Binary vs. Ascii), extension, and filename. Lets store it
 		programParameters.fileExtension += receiveBuffer[1];	//First char of the extension
 		programParameters.fileExtension += receiveBuffer[2];	//Second char
@@ -135,27 +136,26 @@ int start_server_protocol(int* tcpOrUdp)
 		float sendRate = flowControl.GetSendRate();		//Returns 30 if mode = Good, or 10 if mode = Bad
 
 
-		//char* resizedBuffer = (char*)malloc(sizeof(char));	//DEBUG WILL NEED TO ADJUST THE MALLOC SIZE
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
 			memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
-			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
-			if (!(selectResult > 0))
-			{
+			//int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
+			//if (!(selectResult > 0))
+			//{
 
-				//Make one final recv() call to ensure the socket is indeed empty
-				//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
-				if (!(recvStatus > 0))
-				{
-					break;
-				}
-			}
-			else
-			{
-					//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
-			}
+			//	//Make one final recv() call to ensure the socket is indeed empty
+			//	//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
+			//	if (!(recvStatus > 0))
+			//	{
+			//		break;
+			//	}
+			//}
+			//else
+			//{
+			//		//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
+			//}
 			programParameters.filepath += receiveBuffer;
 		}
 		timeRequired = clock() - timeRequired;
@@ -180,12 +180,12 @@ int start_server_protocol(int* tcpOrUdp)
 		memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 		// Fill recieveBuffer with hashvalue and send
 		strcpy(receiveBuffer, hashValue);
-		reliableConn.SendPacket((unsigned char *)receiveBuffer, sizeof((unsigned char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
+		reliableConn.SendPacket((char *)receiveBuffer, sizeof((char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
 		memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 		// Fill recieveBuffer with time and send
 		itoa(totalTime, receiveBuffer,10);	// Store total in recieveBuffer for sending
-		reliableConn.SendPacket((unsigned char *)receiveBuffer, sizeof((unsigned char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
+		reliableConn.SendPacket((char *)receiveBuffer, sizeof((char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
 		//All done
 		//free(receiveBuffer);

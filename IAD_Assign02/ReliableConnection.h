@@ -52,10 +52,10 @@ public:
 	*	int messageSize : Size of the message in bytes
 	*  RETURNS			: bool : Returns true if the message as sent without error
 	*/
-	bool SendPacket(const unsigned char packetData[], int messageSize, struct sockaddr_in socketAddress, int len, FileReadMode fileReadMode, const string fileExtension)
+	bool SendPacket(char packetData[], int messageSize, struct sockaddr_in socketAddress, int len, FileReadMode fileReadMode, const string fileExtension)
 	{
 		//RELIABLE_CONN_HEADER_SIZE is a global set to 12					
-		unsigned char* messageContainer = (unsigned char*)malloc(messageSize + RELIABLE_CONN_HEADER_SIZE);
+		char* messageContainer = (char*)malloc(messageSize + RELIABLE_CONN_HEADER_SIZE);
 
 
 		/*
@@ -75,29 +75,29 @@ public:
 
 		//Define the outbound packet, and add 5 bytes of extra space for the IP address 
 		// data in the first 5 indexes
-		unsigned char* packet = (unsigned char*)malloc(messageSize + PACKET_HEADER_SIZE);
+		char* packet = (char*)malloc(messageSize + PACKET_HEADER_SIZE);
 		if (fileReadMode == Ascii)
 		{
-			packet[0] = (unsigned char)('A');
+			packet[0] = (char)('A');
 		}
 		else
 		{
-			packet[0] = (unsigned char)('B');
+			packet[0] = (char)('B');
 		}
 
 
 		/*
 		* Copy in the file extension into the message header
-		* The file extension will always be a max of three chars, and will ocupy index's one to three. 
-		*	For example : 
-		*	-> exe, txt, dat, bin etc. 
+		* The file extension will always be a max of three chars, and will ocupy index's one to three.
+		*	For example :
+		*	-> exe, txt, dat, bin etc.
 		*/
-		packet[1] = (unsigned char)(fileExtension.c_str());
+		packet[1] = (char)(fileExtension.c_str());
 
 
 		//Copy the message contents to the outbound packet, and wave that bitch goodbye
 		memcpy(&packet[4], messageContainer, (int)sizeof(messageContainer));
-		bool sendComplete = sendto(connectedSocket, (const char*)packet, messageSize + 4, 0, (const struct sockaddr*)&socketAddress, len);
+		bool sendComplete = sendto(connectedSocket, packet, messageSize + 4, 0, (const struct sockaddr*)&socketAddress, len);
 		if (!(sendComplete == true))
 		{
 			return false;
@@ -120,7 +120,7 @@ public:
 	*
 	* NOTE: Called from SendPacket(), after sequence, ack, and ack_bits, are initialized, and before the message is sent
 	*/
-	void WriteHeader(unsigned char* header, unsigned int sequence, unsigned int ack, unsigned int ack_bits)
+	void WriteHeader(char* header, unsigned int sequence, unsigned int ack, unsigned int ack_bits)
 	{
 		WriteInteger(header, sequence);
 		WriteInteger(header + 4, ack);
@@ -134,12 +134,12 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	void WriteInteger(unsigned char* data, unsigned int value)
+	void WriteInteger(char* data, unsigned int value)
 	{
-		data[0] = (unsigned char)(value >> 24);
-		data[1] = (unsigned char)((value >> 16) & 0xFF);
-		data[2] = (unsigned char)((value >> 8) & 0xFF);
-		data[3] = (unsigned char)(value & 0xFF);
+		data[0] = (char)(value >> 24);
+		data[1] = (char)((value >> 16) & 0xFF);
+		data[2] = (char)((value >> 8) & 0xFF);
+		data[3] = (char)(value & 0xFF);
 	}
 
 
@@ -153,7 +153,7 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	int ReceivePacket(unsigned char data[], int bufferSize, struct sockaddr_in socketAddress)
+	int ReceivePacket(char data[], int bufferSize, struct sockaddr_in socketAddress)
 	{
 		if ((int)bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
 		unsigned char* packet = (unsigned char*)malloc(bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);	//Base header size set to 4
@@ -162,7 +162,7 @@ public:
 		SOCKET sender_addr;
 		socklen_t fromLength = sizeof(sender_addr);
 		//Receive a message from the socket
-		int bytes_read =	recvfrom(connectedSocket,	 (char*)receivePacket,		bufferSize,				0, (sockaddr*)&sender_addr,	&fromLength);
+		int bytes_read = recvfrom(connectedSocket, (char*)receivePacket, bufferSize, 0, (sockaddr*)&sender_addr, &fromLength);
 		memcpy(packet, &receivePacket, sizeof(receivePacket));
 
 		//
@@ -291,14 +291,14 @@ public:
 
 
 
-	void OnStop(void)								{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-	void OnDisconnect(void)							{ ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
-	ReliabilitySystem& GetReliabilitySystem(void)	{ return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
+	void OnStop(void) { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	void OnDisconnect(void) { ClearData(); }									//When the connection is stopped, or closed, reset the counter data used to ensure the connection is reliable
+	ReliabilitySystem& GetReliabilitySystem(void) { return reliabilitySystem; }						//Return a reference to the reliabilitySystem object
 	struct sockaddr_in GetSocketAddressStruct(void) { return socketAddress; }							//
-	SOCKET GetConnectedSocket(void)					{ return connectedSocket; }							//
-	void SetConnectedSocket(SOCKET newSocket)		{ connectedSocket = newSocket; }					//
+	SOCKET GetConnectedSocket(void) { return connectedSocket; }							//
+	void SetConnectedSocket(SOCKET newSocket) { connectedSocket = newSocket; }					//
 	void SetSocketAddress(struct sockaddr_in newAddressStruct) { socketAddress = newAddressStruct; }	//
-	int GetHeaderSize() const								   { return BASE_HEADER_SIZE + reliabilitySystem.GetHeaderSize(); }
+	int GetHeaderSize() const { return BASE_HEADER_SIZE + reliabilitySystem.GetHeaderSize(); }
 
 
 #pragma endregion

@@ -20,7 +20,6 @@ int main(int argc, char* argv[])
 {
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(1,1), &wsa_data);
-	OperatingMode operatingMode;
 	//Properties temp = { {0} };
 	//programParameters = &temp;
 
