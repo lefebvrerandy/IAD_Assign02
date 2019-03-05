@@ -134,7 +134,7 @@ public:
 	*  PARAMETERS    : Defined below,
 	*  RETURNS       :
 	*/
-	void WriteInteger(unsigned char* data, unsigned int value)
+	void WriteInteger(unsigned char * data, unsigned int value)
 	{
 		data[0] = (unsigned char)(value >> 24);
 		data[1] = (unsigned char)((value >> 16) & 0xFF);
@@ -155,15 +155,13 @@ public:
 	*/
 	int ReceivePacket(unsigned char data[], int bufferSize, struct sockaddr_in socketAddress)
 	{
-		if ((int)bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
+		if (bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
 		unsigned char* packet = (unsigned char*)malloc(bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);	//Base header size set to 4
-		char receivePacket[256];
-		memset((void*)receivePacket, 0, (sizeof(receivePacket)));
-		SOCKET sender_addr;
-		socklen_t fromLength = sizeof(sender_addr);
+
+
 		//Receive a message from the socket
-		int bytes_read =	recvfrom(connectedSocket,	 (char*)receivePacket,		bufferSize,				0, (sockaddr*)&sender_addr,	&fromLength);
-		memcpy(packet, &receivePacket, sizeof(receivePacket));
+		int bytes_read =	recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, (int*)sizeof(&socketAddress));
+
 
 		//
 		if (bytes_read == 0)

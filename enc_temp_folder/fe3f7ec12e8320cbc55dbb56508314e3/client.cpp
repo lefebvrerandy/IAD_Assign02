@@ -43,6 +43,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 		return  SOCKET_CREATION_ERROR; 
 	}
 
+
 	//Stage 3: Connect to the server
 	int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
 	if (!(boundSocketHandle >= -1))
@@ -53,7 +54,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 	//Stage 4: Setup the reliable connection
 	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
-	reliableConn.SetConnectedSocket(openSocketHandle);
+	reliableConn.SetConnectedSocket(boundSocketHandle);
 	reliableConn.SetSocketAddress  (socketAddress);
 
 
@@ -83,7 +84,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 			case Binary:
 				fileContents = FileIO::ReadBinaryFile(sourceString);
 				extension = programParameters.filepath.find_last_of(".");
-				programParameters.fileExtension = programParameters.filepath.substr(extension + 1);
+				programParameters.fileExtension.substr(extension);
 				if (fileContents.empty())
 				{
 					//If the file can't be read, then the tests can't be completed; return with an error
@@ -92,20 +93,16 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 				}
 				break;
 
-		case Ascii:
-			fileContents = FileIO::ReadAsciiFile(sourceString);
-			extension = programParameters.filepath.find_last_of(".");
-			programParameters.fileExtension = programParameters.filepath.substr(extension+1);
-			if (fileContents.empty())
-			{
-				//If the file can't be read, then the tests can't be completed; return with an error
-				printError(FILE_READ_ERROR);
-				return FILE_READ_ERROR;
-			}
-			break;
-	}
-	try
-	{
+			case Ascii:
+				fileContents = FileIO::ReadAsciiFile(sourceString);
+				if (fileContents.empty())
+				{
+					//If the file can't be read, then the tests can't be completed; return with an error
+					printError(FILE_READ_ERROR);
+					return FILE_READ_ERROR;
+				}
+				break;
+		}
 		//Get the md5 value of the file
 		LPCSTR filename = sourceString.c_str();
 		char* hashValue = GetMd5Value(filename);
