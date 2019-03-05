@@ -43,7 +43,6 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 		return  SOCKET_CREATION_ERROR; 
 	}
 
-
 	//Stage 3: Connect to the server
 	int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
 	if (!(boundSocketHandle > SOCKET_ERROR))
@@ -54,7 +53,7 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 	//Stage 4: Setup the reliable connection
 	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
-	reliableConn.SetConnectedSocket(boundSocketHandle);
+	reliableConn.SetConnectedSocket(openSocketHandle);
 	reliableConn.SetSocketAddress  (socketAddress);
 
 
@@ -73,16 +72,15 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 
 	//Stage 5: Read in the file in binary or ascii mode
-	string sourceString = ".//source//" + programParameters.fileExtension;
-	string fileContents = NULL;
-	size_t extension = NULL;
+	string sourceString = ".//source//" + programParameters.filepath;
+	string fileContents;
+	size_t extension;
 	switch (programParameters.readMode)
 	{
 		case Binary:
 			fileContents = FileIO::ReadBinaryFile(sourceString);
-			
 			extension = programParameters.filepath.find_last_of(".");
-			programParameters.fileExtension.substr(extension + 1);
+			programParameters.fileExtension = programParameters.filepath.substr(extension + 1);
 			if (fileContents.empty())
 			{ 
 				//If the file can't be read, then the tests can't be completed; return with an error
@@ -93,6 +91,8 @@ int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp)
 
 		case Ascii:
 			fileContents = FileIO::ReadAsciiFile(sourceString);
+			extension = programParameters.filepath.find_last_of(".");
+			programParameters.fileExtension = programParameters.filepath.substr(extension+1);
 			if (fileContents.empty())
 			{
 				//If the file can't be read, then the tests can't be completed; return with an error

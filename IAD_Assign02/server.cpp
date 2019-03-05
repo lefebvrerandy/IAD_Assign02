@@ -80,15 +80,12 @@ int start_server_protocol(int* tcpOrUdp)
 		return SOCKET_BIND_ERROR;			
 	}
 	ReliableConnection reliableConn(programParameters.ProtocolId, programParameters.TimeOut);
-	reliableConn.SetConnectedSocket(boundSocketHandle);
+	reliableConn.SetConnectedSocket(openSocketHandle);
 	reliableConn.SetSocketAddress(socketAddress);
 	do
 	{
 		programParameters.filepath.clear();	// Clear the string value
 		//Stage 4: Accept the incoming client connection
-		struct sockaddr_in remoteAddress;
-		socklen_t addressSize = sizeof(remoteAddress);
-		SOCKET acceptedSocketConnection;
 
 
 		fd_set readFDs;
@@ -106,17 +103,18 @@ int start_server_protocol(int* tcpOrUdp)
 		//Stage 6: Receive the clients reply
 		clock_t timeRequired = clock();
 		int recvStatus = 0;
-		char* recieveBuffer = (char*)malloc(sizeof(char) * (PACKET_SIZE));
+		char receiveBuffer[256];
+
 		while (recvStatus <= 0)
 		{
-			recvStatus = reliableConn.ReceivePacket((unsigned char*)recieveBuffer, sizeof(recieveBuffer), socketAddress);
-			//recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
+			memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
+			recvStatus = reliableConn.ReceivePacket((unsigned char*)receiveBuffer, sizeof(receiveBuffer), socketAddress);
+			Sleep(10);
 		} 
-
 		//recieveBuffer header contains the fileReadMode (Binary vs. Ascii), extension, and filename. Lets store it
-		programParameters.fileExtension += recieveBuffer[1];	//First char of the extension
-		programParameters.fileExtension += recieveBuffer[2];	//Second char
-		programParameters.fileExtension += recieveBuffer[3];	//Third char
+		programParameters.fileExtension += receiveBuffer[1];	//First char of the extension
+		programParameters.fileExtension += receiveBuffer[2];	//Second char
+		programParameters.fileExtension += receiveBuffer[3];	//Third char
 
 
 		//Index 4 - 6 are used by the reliabilitySystem for packet tracking
@@ -142,7 +140,7 @@ int start_server_protocol(int* tcpOrUdp)
 		{
 
 			//Get the blocks ID and save it to the list
-			memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+			memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);	
 			if (!(selectResult > 0))
 			{
@@ -158,7 +156,7 @@ int start_server_protocol(int* tcpOrUdp)
 			{
 					//recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (struct sockaddr *)&sender_addr, &len);
 			}
-			programParameters.filepath += recieveBuffer;
+			programParameters.filepath += receiveBuffer;
 		}
 		timeRequired = clock() - timeRequired;
 		//http://forums.devshed.com/programming-42/convert-timeval-double-568348.html
@@ -179,18 +177,18 @@ int start_server_protocol(int* tcpOrUdp)
 		LPCSTR filename = tempString.c_str();
 		char* hashValue = GetMd5Value(filename);
 
-		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 		// Fill recieveBuffer with hashvalue and send
-		recieveBuffer = hashValue;
-		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
+		strcpy(receiveBuffer, hashValue);
+		reliableConn.SendPacket((unsigned char *)receiveBuffer, sizeof((unsigned char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
-		memset((void*)recieveBuffer, 0, (sizeof(recieveBuffer)));
+		memset((void*)receiveBuffer, 0, (sizeof(receiveBuffer)));
 		// Fill recieveBuffer with time and send
-		itoa(totalTime, recieveBuffer,10);	// Store total in recieveBuffer for sending
-		reliableConn.SendPacket((unsigned char *)recieveBuffer, sizeof((unsigned char *)recieveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
+		itoa(totalTime, receiveBuffer,10);	// Store total in recieveBuffer for sending
+		reliableConn.SendPacket((unsigned char *)receiveBuffer, sizeof((unsigned char *)receiveBuffer), socketAddress, sizeof(socketAddress),programParameters.readMode, programParameters.fileExtension);
 
 		//All done
-		free(recieveBuffer);
+		//free(receiveBuffer);
 	} while (true);
 
 

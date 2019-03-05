@@ -67,7 +67,7 @@ char* GetMd5Value(LPCSTR filename)
 	BOOL bResult = FALSE;
 	HCRYPTPROV hProv = 0;
 	HCRYPTHASH hHash = 0;
-	HANDLE hFile = NULL;
+	HANDLE hFile ;
 	BYTE rgbFile[BUFSIZE];
 	DWORD cbRead = 0;
 	BYTE rgbHash[MD5LEN];
