@@ -13,12 +13,16 @@
 #include "shared.h"
 #include "server.h"
 #include "client.h"
+#include "ConnectionData.h"
+
 
 int main(int argc, char* argv[])
 {
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(1,1), &wsa_data);
 	OperatingMode operatingMode;
+	//Properties temp = { {0} };
+	//programParameters = &temp;
 
     // process the command line arguments
 	// If 1 argument, must be start server. 
@@ -55,7 +59,7 @@ int proc_arguments(int argumentCount, char* args[])
 	{
 		if (argumentCount > 2)
 		{
-			//Client
+			//ClientConnectionData::programParameters
 			//if (!validateAddress((char*)args[CLA_IP_ADDRESS]))
 			//{
 			//	throw new exception();

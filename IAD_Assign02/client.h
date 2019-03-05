@@ -10,4 +10,3 @@
 
 int start_client_protocol(const int stream_or_datagram, const int tcp_or_udp);
 int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress);
-int CalculateFileSize(const unsigned char* file);

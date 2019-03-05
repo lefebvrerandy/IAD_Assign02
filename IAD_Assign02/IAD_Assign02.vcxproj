@@ -131,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client.h" />
+    <ClInclude Include="ConnectionData.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="Net.h" />
     <ClInclude Include="Network.h" />

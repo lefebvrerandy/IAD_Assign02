@@ -13,6 +13,7 @@
 #include "FileIO.h"
 #include "ReliableConnection.h"
 #include "FlowControl.h"
+#include "ConnectionData.h"
 
 
 /*
@@ -26,7 +27,7 @@ int start_server()
 {
 	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
 
-	//Spawn ta thread for UDP
+	//Spawn the thread for UDP
 	HANDLE thread_windows_server[2];
 
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
@@ -112,7 +113,7 @@ int start_server_protocol(int* tcpOrUdp)
 			//recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&sender_addr, &len);
 		} 
 
-		//recieveBuffer header contains the fileReadMode (Binary vs. Ascii), extention, and filename. Lets store it
+		//recieveBuffer header contains the fileReadMode (Binary vs. Ascii), extension, and filename. Lets store it
 		programParameters.fileExtension += recieveBuffer[1];	//First char of the extension
 		programParameters.fileExtension += recieveBuffer[2];	//Second char
 		programParameters.fileExtension += recieveBuffer[3];	//Third char

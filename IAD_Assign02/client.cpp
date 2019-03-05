@@ -8,11 +8,11 @@
 */
 
 
-#include "shared.h"
 #include "client.h"
 #include "FileIO.h"
 #include "ReliableConnection.h"
 #include "FlowControl.h"
+#include "ConnectionData.h"
 
 
 /*
