@@ -63,13 +63,22 @@ public:
 		*  otherwise, they are tracked, and incremented as messages are exchanged
 		*  These don't need to be touched as far as I know
 		*/
-		unsigned int seq = reliabilitySystem.GetLocalSequence();		//Local sequence number for most recently sent packet
-		unsigned int ack = reliabilitySystem.GetRemoteSequence();		//Remote sequence number for most recently received packet
-		unsigned int ack_bits = reliabilitySystem.GenerateAckBits();	//Count of the acknowledged bits
+		int seq = reliabilitySystem.GetLocalSequence() + 5;		//Local sequence number for most recently sent packet
+		int ack = reliabilitySystem.GetRemoteSequence() + 1;		//Remote sequence number for most recently received packet
+		int ack_bits = reliabilitySystem.GenerateAckBits();	//Count of the acknowledged bits
 
 
-		//Setup the message header, and copy the contents of the message to the index position right after the header
-		WriteHeader(messageContainer, seq, ack, ack_bits);
+		messageContainer[0] = reinterpret_cast<char>(&seq);
+		messageContainer[2] = '0' + ack;
+		messageContainer[4] = (unsigned char)ack_bits;
+
+		//memcpy(messageContainer, (char*)sequence, 2);
+		//memcpy(messageContainer + 4, (char*)ack, 2);
+		//memcpy(messageContainer + 8, (char*)ack_bits, 2);
+		messageContainer[0] = reinterpret_cast<unsigned char>(&seq);
+		messageContainer[2] = (unsigned char)ack;
+		messageContainer[4] = (unsigned char)ack_bits;
+
 		memcpy(messageContainer + RELIABLE_CONN_HEADER_SIZE, packetData, messageSize);
 
 
@@ -113,37 +122,6 @@ public:
 
 
 	/*
-	*  METHOD        : WriteHeader
-	*  DESCRIPTION   :
-	*  PARAMETERS    : Defined below,
-	*  RETURNS       :
-	*
-	* NOTE: Called from SendPacket(), after sequence, ack, and ack_bits, are initialized, and before the message is sent
-	*/
-	void WriteHeader(unsigned char* header, unsigned int sequence, unsigned int ack, unsigned int ack_bits)
-	{
-		WriteInteger(header, sequence);
-		WriteInteger(header + 4, ack);
-		WriteInteger(header + 8, ack_bits);
-	}
-
-
-	/*
-	*  METHOD        :
-	*  DESCRIPTION   :
-	*  PARAMETERS    : Defined below,
-	*  RETURNS       :
-	*/
-	void WriteInteger(unsigned char* data, unsigned int value)
-	{
-		data[0] = (unsigned char)(value >> 24);
-		data[1] = (unsigned char)((value >> 16) & 0xFF);
-		data[2] = (unsigned char)((value >> 8) & 0xFF);
-		data[3] = (unsigned char)(value & 0xFF);
-	}
-
-
-	/*
 	*  METHOD        :
 	*  DESCRIPTION   :
 	*	1)
@@ -157,10 +135,10 @@ public:
 	{
 		if (bufferSize <= RELIABLE_CONN_HEADER_SIZE) return false;													//Header set to 12
 		unsigned char* packet = (unsigned char*)malloc(bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE);	//Base header size set to 4
-
+		int len = sizeof(socketAddress);
 
 		//Receive a message from the socket
-		int bytes_read =	recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, (int*)sizeof(&socketAddress));
+		int bytes_read = recvfrom(connectedSocket, (char*)packet, bufferSize + RELIABLE_CONN_HEADER_SIZE + BASE_HEADER_SIZE, 0, (struct sockaddr*)&socketAddress, &len);
 
 
 		//
